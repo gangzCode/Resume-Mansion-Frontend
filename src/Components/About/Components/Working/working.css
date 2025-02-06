@@ -1,0 +1,107 @@
+.working_topic_set {
+  margin-bottom: 25px;
+}
+.working_topic_set_topic {
+  font-size: 48px;
+  color: #051d14;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.working_topic_set_pera {
+  color: #4b5852;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.working_card_continer {
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.working_card {
+  width: 380px;
+  border-radius: 24px;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  height: 480px;
+}
+.working_card_one {
+  background-image: url("./Img/card1.jpeg");
+}
+
+.working_card_two {
+  background-image: url("./Img/card2.jpeg");
+}
+.working_card_three {
+  background-image: url("./Img/card3.jpeg");
+}
+.working_card_for {
+  background-image: url("./Img/card4.jpeg");
+}
+.working_card_five {
+  background-image: url("./Img/card5.jpeg");
+}
+.working_card_six {
+  background-image: url("./Img/card6.jpeg");
+}
+.working_card_content {
+  padding: 32px 24px;
+  position: relative;
+  backdrop-filter: blur(10px); /* Corrected for background blur effect */
+  background-color: rgba(0, 0, 0, 0.433); /* Improved transparency syntax */
+  top: 251px;
+  color: white;
+  border-radius: 0 0 24px 24px;
+}
+.working_card_worker_name_main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+.working_card_worker_name {
+  font-size: 24px;
+  font-weight: 400;
+}
+.working_card_worker_icon {
+  font-size: 24px;
+  cursor: pointer;
+}
+.worker_card_possion {
+  font-size: 18px;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.worker_card_pera {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+.worker_card_link_icon {
+  margin-top: 25px;
+  font-size: 28px;
+}
+.meet_btn {
+  background-color: #bcec88;
+  color: #051d14;
+  padding: 16px 28px;
+  cursor: pointer;
+  font-size: 18px;
+  margin: 35px auto;
+  display: flex;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid #bcec88;
+}
+@media (max-width: 600px) {
+  .working_card{
+    width: 100%;
+  }
+  .working_card_continer,
+  .working_card_continer_main{
+    width: 100%;
+  }
+}

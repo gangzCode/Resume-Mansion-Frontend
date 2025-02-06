@@ -1,0 +1,118 @@
+.cookis_continer {
+  width: 100%;
+  position: fixed;
+  height: 100vh;
+  z-index: 999999999999;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: block;
+}
+.cookis_box {
+  position: absolute;
+  display: flex;
+  bottom: 40px;
+  width: 438px;
+  padding: 24px;
+  right: 40px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  border-radius: 16px;
+  background: var(--surface-secondary, #fff);
+}
+.cookis_box_one {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  align-self: stretch;
+}
+.cookis_topic {
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 30px;
+}
+.cookis_pera {
+  color: var(--text-secondary, #4b5852);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+.lernmore_cookis {
+  color: var(--brand-secondary, #0d5438);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+}
+.cookis_box_two {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  align-self: stretch;
+}
+.cookis_box_two_btn_one {
+  display: flex;
+  height: 48px;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  align-self: stretch;
+  width: 100%;
+  border-radius: 48px;
+  background: var(--brand-secondary-2, #063b26);
+  color: var(--text-inverse-primary, #fff);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  border: 1px solid var(--brand-secondary-2, #063b26);
+  line-height: 24px;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+.cookis_box_two_btn_two {
+  display: flex;
+  height: 48px;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  gap: 8px;
+  
+  border-radius: 48px;
+  border: 1px solid var(--brand-secondary-2, #063b26);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  align-self: stretch;
+}
+@media (max-width: 500px) {
+  .cookis_box {
+      width: 100%;
+      bottom: 5px;
+     right: 0;
+     
+      
+  }
+
+}

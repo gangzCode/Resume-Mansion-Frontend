@@ -1,0 +1,108 @@
+.career_side_section_two_topic {
+  color: #063b26;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.career_side_continer {
+  width: 280px;
+  gap: 32px;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  display: flex;
+}
+
+.newone{
+  margin-top: 8px;
+  cursor: pointer;
+  color: #063b26ad;
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 14px;
+}
+.career_side_section_two_nav_item_set {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  flex-direction: column;
+  margin: 8px 0;
+  justify-content: center;
+}
+.career_side_section_two_nav_item {
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #4b5852;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+}
+.career_side_section_two_nav_item_active {
+  background-color: #bcec88;
+  color: #051d14;
+  width: 250px;
+  border-radius: 6px;
+}
+.career_side_section_three_tag_continer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: start;
+  align-items: center;
+}
+.career_side_section_three_tagname {
+  color: #051d14;
+  background-color: #c6c6c6;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.career_side_search {
+  border: 0;
+}
+.career_side_search_bar {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  width: 250px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid #D0D5DD;
+  color: #4b5852;
+}
+.career_side_search_icon {
+  font-weight: bold;
+  font-size: 20px;
+}
+@media (max-width: 1330px) {
+  .career_side_continer{
+    width: 100%;
+  }
+}
+@media (max-width: 1303px) {
+  .career_side_continer{
+    width: 100%;
+  }
+  .career_side_section_two_nav_item_active{
+    width: 100%;
+  }
+  .career_side_section_two_nav_item_set{
+    display: block;
+  }
+  .career_side_section_two_nav_item{
+    margin: 25px 0;
+  }
+  .career_side_search_bar{
+    width: 100%;
+  }
+  .career_side_continer{
+    display: block;
+    width: 100%;
+  }
+  .career_side_section_two_topic{
+    margin: 15px 0;
+  }
+}

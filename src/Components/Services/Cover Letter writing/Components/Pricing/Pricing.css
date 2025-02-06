@@ -1,0 +1,14 @@
+.price_container_service_page_main {
+  padding: 128px 0;
+}
+@media (max-width: 908px) {
+  .price_container_service_page_main {
+    padding: 96px 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .price_container_service_page_main {
+    padding: 64px 0;
+  }
+}

@@ -1,0 +1,23 @@
+.hero_back_btn_ordeer {
+  display: flex;
+  padding: 10px 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  color: var(--brand-secondary, #0d5438);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  border-radius: 32px;
+  border: 1px solid var(--brand-secondary, #0d5438);
+  cursor: pointer;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+.btn_add_new{
+  display: flex;
+  width: 100%;
+  align-items: start;
+}

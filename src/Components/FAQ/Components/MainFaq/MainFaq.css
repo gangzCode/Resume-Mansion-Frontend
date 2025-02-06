@@ -1,0 +1,64 @@
+.questuin_card_faq {
+  background-color: #f5f6f4;
+  cursor: pointer;
+  width: 100%;
+  padding: 15px 0px 20px 0px;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 10px;
+}
+.main_part_pdin_fqa {
+  width: 768px;
+  margin: 0 auto;
+}
+.question_card_main_faq {
+  margin-top: 20px;
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+
+  flex-direction: column;
+  gap: 24px;
+}
+.card_main_faq {
+  background-color: #f5f6f4;
+  padding: 128px 0;
+}
+.faq_main_topi {
+  margin-bottom: 25px;
+  text-align: center;
+  color: #051d14;
+  font-weight: 600;
+  font-size: 36px;
+}
+.faq_main_pera {
+  margin-bottom: 30px;
+  text-align: center;
+  color: #051d14;
+  font-weight: 400;
+  font-size: 20px;
+}
+
+.career_side_search_bar_main {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  width: 100%;
+  border-radius: 8px;
+  background-color: white;
+  padding: 10px 14px;
+  border: 1px solid #d0d5dd;
+  color: #4b5852;
+}
+.career_side_search {
+  border: 0;
+  width: 100%;
+  background-color: transparent;
+}
+@media (max-width: 708px) {
+  .main_part_pdin_fqa {
+    padding: 0px 10px;
+    width: 100%;
+  }
+}

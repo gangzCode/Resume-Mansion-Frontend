@@ -1,0 +1,144 @@
+.about_grid_image_section_container {
+  display: grid;
+  grid-gap: 10px;
+  grid-auto-rows: auto;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-areas:
+    "about_grid_image_section_container_card1 about_grid_image_section_container_card2 about_grid_image_section_container_card3"
+    "about_grid_image_section_container_card1 about_grid_image_section_container_card2 about_grid_image_section_container_card3"
+    "about_grid_image_section_container_card1 about_grid_image_section_container_card4 about_grid_image_section_container_card3"
+    "about_grid_image_section_container_card5 about_grid_image_section_container_card4 about_grid_image_section_container_card6";
+}
+.about_grid_image_section_container_card1 {
+  grid-area: about_grid_image_section_container_card1;
+}
+.about_grid_image_section_container_card2 {
+  grid-area: about_grid_image_section_container_card2;
+}
+.about_grid_image_section_container_card3 {
+  grid-area: about_grid_image_section_container_card3;
+}
+.about_grid_image_section_container_card4 {
+  grid-area: about_grid_image_section_container_card4;
+}
+.about_grid_image_section_container_card5 {
+  grid-area: about_grid_image_section_container_card5;
+}
+.about_grid_image_section_container_card6 {
+  grid-area: about_grid_image_section_container_card6;
+}
+.about_grid_image_section_container_card1 {
+  background-color: #bcec88;
+  color: #051d14;
+  display: flex;
+  gap: 15px;
+  flex-direction: column;
+  align-items: start;
+  border-radius: 24px;
+  padding: 32px;
+}
+.about_grid_image_section_container_card1_icon {
+  font-size: 47px;
+}
+.about_grid_image_section_container_card1_topic {
+  font-size: 24px;
+  font-weight: 600;
+}
+.about_grid_image_section_container_card1_pera {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+}
+.about_grid_image_section_container_card2 {
+  background-image: url("./img/card1.png");
+  background-size: cover;
+  object-fit: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  border-radius: 24px;
+  height: 100%;
+}
+.about_grid_image_section_container_card3 {
+  background-image: url("./img/card2.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+}
+.about_grid_image_section_container_card4 {
+  background-image: url("./img/card4.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  border-radius: 24px;
+  height: 100%;
+}
+.about_grid_image_section_container_card5 {
+  background-image: url("./img/card3.png");
+  background-size: cover;
+  border-radius: 24px;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+}
+.about_grid_image_section_container_card6 {
+  background-color: #063b26;
+  color: white;
+  padding: 32px;
+  gap: 20px;
+  flex-direction: column;
+  align-items: start;
+  display: flex;
+  border-radius: 24px;
+}
+.about_grid_image_section_container_card6_topic {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+.about_grid_image_section_container_card6_owner_card_pera{
+  color: rgba(255, 255, 255, 0.7); 
+  margin-top: 10px;
+  padding-left: 15px;
+}
+.about_grid_image_section_container_card6_pera {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: rgba(255, 255, 255, 0.7); 
+}
+@media (max-width: 998px) {
+  .about_grid_image_section_container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Adjust as needed */
+    padding: 16px;
+  }
+  .about_grid_image_section_container_card1,
+  .about_grid_image_section_container_card2,
+  .about_grid_image_section_container_card3,
+  .about_grid_image_section_container_card4,
+  .about_grid_image_section_container_card5,
+  .about_grid_image_section_container_card6 {
+    width: 100%;
+    border-radius: 24px;
+  }
+
+  .about_grid_image_section_container_card2,
+  .about_grid_image_section_container_card3,
+  .about_grid_image_section_container_card4,
+  .about_grid_image_section_container_card5 {
+    background-size: cover;
+    background-position: center;
+    height: 200px; 
+    display: block; 
+  }
+ 
+}
+@media (max-width: 600px) {
+  .mision_vision_card_continer{
+    flex-direction: column;
+  }
+
+}

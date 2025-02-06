@@ -1,0 +1,110 @@
+.alert_box_topic {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+
+.alert_continer {
+  width: 100%;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7); /* Dark background overlay */
+  display: flex;
+  justify-content: center; /* Centers horizontally */
+  align-items: center; /* Centers vertically */
+  z-index: 999999999999; /* Ensures it's on top */
+}
+
+
+
+.svg_icon_alertt {
+  cursor: pointer;
+}
+.alert_box_two {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  gap: 16px;
+}
+.alert_box_two_btn_one {
+  display: flex;
+  height: 48px;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  background-color: white;
+  gap: 8px;
+  border-radius: 48px;
+  border: 1px solid var(--brand-secondary-2, #063b26);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  align-self: stretch;
+}
+.alert_box_two_btn_two {
+  display: flex;
+  height: 48px;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid var(--brand-secondary-2, #063b26);
+  align-self: stretch;
+  width: 100%;
+  border-radius: 48px;
+  background: var(--brand-secondary-2, #063b26);
+  color: var(--text-inverse-primary, #fff);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+.alert_input_field {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 6px;
+  width: 100%;
+  border: 1px solid var(--Gray-300, #d0d5dd);
+  background: var(--Base-White, #fff);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+.div_input_part {
+  width: 100%;
+}
+.alert_footer_box {
+  position: absolute;
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the element itself */
+  width: 520px;
+  padding: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  border-radius: 16px;
+  background: var(--surface-secondary, #fff);
+}
+
+@media (max-width: 550px) {
+  .alert_footer_box {
+    width: 90%;
+  }
+  .alert_box_two {
+    flex-direction: column;
+  }
+}

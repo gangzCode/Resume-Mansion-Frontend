@@ -1,0 +1,133 @@
+.invest_section_continer {
+  display: flex;
+  gap: 45px;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+}
+.card_invest_sub_section_topi_set {
+  display: flex;
+  gap: 24px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+}
+.main_colum_ivestse {
+  display: flex;
+  gap: 50px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+}
+.invest_section_topic {
+  color: #051d14;
+  font-size: 48px;
+  line-height: 60px; /* 125% */
+  letter-spacing: -0.96px;
+  width: 70%;
+  font-weight: 600;
+}
+.invest_section_card_continer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: stretch;
+}
+.invest_section_card {
+  border-left: 1px solid #051d14;
+  padding-left: 25px;
+  width: 400px;
+  color: #051d14;
+}
+.invest_section_card_topic {
+  display: flex;
+  justify-content: start;
+  margin-bottom: 10px;
+  gap: 15px;
+  font-weight: 600;
+  align-items: start;
+}
+.invest_section_card_data {
+  font-weight: 400;
+  font-size: 16px;
+  color: #4b5852;
+  line-height: 24px;
+}
+
+.card_invest_sub_section {
+  background-color: #ffeb69;
+  color: #532e07;
+  padding: 40px;
+  border-radius: 24px;
+  display: flex;
+  gap: 32px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+}
+.card_invest_sub_section_topic {
+  font-weight: 600;
+  font-size: 48px;
+  margin-bottom: 10px;
+  width: 60%;
+  line-height: 60px; /* 125% */
+  letter-spacing: -0.96px;
+}
+.card_invest_sub_section_pera {
+  font-weight: 400;
+  font-size: 16px;
+  width: 63%;
+  line-height: 24px;
+}
+.card_invest_sub_section_linkset {
+  display: flex;
+  align-items: flex-start;
+  justify-content: stretch;
+  gap: 10px;
+  margin: 25px 0;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.card_invest_sub_section_linkset_colum {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: start;
+  justify-content: start;
+}
+.card_invest_sub_section_link {
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 18px;
+}
+@media (max-width: 997px) {
+  .card_invest_sub_section_linkset {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: start;
+  }
+  .invest_section_topic {
+    width: 100%;
+    font-size: 30px;
+    padding: 0;
+  }
+  .card_invest_sub_section_topic {
+    font-size: 30px;
+    width: 100%;
+    padding: 0;
+  }
+  .card_invest_sub_section_pera {
+    width: 100%;
+  }
+
+  .invest_section_card {
+    width: 100%;
+  }
+}
+@media (max-width: 500px) {
+  .card_invest_sub_section {
+    padding: 24px;
+  }
+}

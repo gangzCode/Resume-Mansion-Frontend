@@ -1,0 +1,42 @@
+.price_container_service_page {
+  background-color: #f5f6f4;
+  padding: 128px 0;
+}
+.price_card_conetnt_hero {
+  text-align: center;
+  margin-bottom: 35px;
+}
+.price_card_conetnt_hero_topic {
+  font-weight: 600;
+  padding: 0 15%;
+  color: #051d14;
+  font-size: 50px;
+}
+.price_card_conetnt_hero_pera {
+  color: #4b5852;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 0 15%;
+}
+@media (max-width: 908px) {
+  .price_card_conetnt_hero_topic {
+    font-size: 30px;
+    width: 100%;
+    padding: 25px 0;
+  }
+  .price_container_service_page {
+    padding: 96px 0;
+  }
+  .price_card_conetnt_hero_pera {
+    width: 100%;
+    padding: 0;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .price_container_service_page {
+    padding: 64px 0;
+  }
+
+}

@@ -1,0 +1,121 @@
+.service_page_card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  border-radius: 24px;
+  gap: 32px;
+  width: 1240px;
+}
+.card_set_continer_service_page {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+}
+.card_service_page_one {
+  background-color: #ffeb69;
+  color: #532e07;
+}
+.card_service_page_two {
+  background-color: #ffc091;
+  color: #532e07;
+}
+.card_service_page_three {
+  background-color: #bcec88;
+  color: #051d14;
+}
+.service_page_card_topic {
+  font-weight: 600;
+  font-size: 48px;
+  text-align: start;
+  margin-bottom: 10px;
+}
+.service_page_card_pera {
+  font-weight: 400;
+  line-height: 24px; 
+  font-size: 16px;
+}
+.service_page_card_content_set {
+  display: flex;
+  align-items: start;
+  justify-content: start;
+  gap: 10px;
+  margin: 15px 0;
+  flex-direction: column;
+}
+.service_page_card_content {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+}
+.tik{
+  width: 25px;
+  height: 25px;
+}
+.service_page_point_icon_thre {
+  background-color: #063b26;
+  color: white;
+  font-size: 24px;
+  padding: 3px;
+  border-radius: 100%;
+}
+
+.service_page_card_btn_thre {
+  color: white;
+  background-color: #063b26;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 40px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #063b26;
+}
+
+.service_page_card_btn {
+  color: white;
+  background-color: #532e07;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 40px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #532e07;
+}
+.service_page_card_image {
+  border-radius: 24px;
+  width: 500px;
+  height: 448px;
+}
+
+@media (max-width: 508px) {
+  .service_page_card_image {
+    display: none;
+  }
+  .service_page_card{
+    padding: 24px;
+  }
+  .service_page_card_topic{
+    font-size: 24px;
+  }
+}
+@media (max-width: 1270px) {
+  .service_page_card{
+    width: 100%;
+  }
+}
+
+@media (max-width: 990px) {
+  .service_page_card {
+    flex-direction: column-reverse;
+  }
+  .service_page_card_image {
+    width: 100%;
+  }
+  .service_page_card_colum {
+    width: 100%;
+  }
+
+}

@@ -1,0 +1,110 @@
+.cart_continer_main_card_topsetion_card_one_chat {
+  display: flex;
+  padding: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  align-self: stretch;
+  border-radius: 16px;
+  background: #f5f6f4;
+  width: 464px;
+}
+.faq_box_chat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+
+.faq_box_chat_first {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.link_chat_box {
+  display: flex;
+  padding: 16px 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 464px;
+  align-self: stretch;
+  border-radius: 16px;
+  border: 1px solid #c6c6c6;
+  background: var(--surface-secondary, #fff);
+}
+.link_chat_box_topic {
+  color: var(--text-primary, #051d14);
+
+  /* Text md/Semibold */
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 150% */
+}
+.link_chat_box_pera {
+  color: var(--text-secondary, #4b5852);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+}
+.link_chat_box_action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  gap: 16px;
+}
+.link_chat_box_action_pera {
+  color: var(--text-primary, #051d14);
+  text-align: right;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 24px;
+}
+.link_chat_box_action_btn {
+  display: flex;
+  padding: 8px 14px;
+  justify-content: center;
+  border: 0;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: var(--brand-primary, #bcec88);
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+}
+.order_details_continer_chat {
+  display: flex;
+  width: 464px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+@media (max-width: 600px) {
+  .cart_continer_main_card_topsetion_card_one_chat,
+  .order_details_continer_chat,
+  .link_chat_box,
+  .cart_continer_main_card_topsetion_card_one_chat{
+    width: 100%;
+  }
+}
+@media (max-width: 900px) {
+  .order_details_continer_chat,
+  .details_section,
+  .data_continer,
+  .link_chat_box,
+  .main_chat_sub,
+  .cart_continer_main_card_topsetion_card_one_chat{
+    width: 100%;
+
+  }
+  .order_details_continer_chat{
+    padding: 24px;
+  }
+}

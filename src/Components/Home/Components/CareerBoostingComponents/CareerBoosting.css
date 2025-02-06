@@ -1,0 +1,120 @@
+/* .card_main {
+  padding: 0px 8%;
+  margin-bottom: 50px;
+} */
+.main_topic_boosting {
+  font-weight: 600;
+  font-size: 48px;
+  width: 700px;
+  line-height: 60px; /* 125% */
+  letter-spacing: -0.96px;
+  margin-bottom: 11px;
+  color: #051d14;
+}
+.para_boosting {
+  font-size: 16px;
+  font-weight: 400;
+  width: 820px;
+  color: #051d14;
+  margin: 15px 0 64px 0;
+  line-height: 24px;
+}
+.boost_card_container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.boost_card {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-direction: column;
+  width: 292px;
+  border-radius: 24px;
+  padding: 24px;
+  gap: 12px;
+}
+.card_boost_one {
+  background-color: #ffeb69;
+  color: #532e07;
+}
+.card_boost_two {
+  background-color: #ffc091;
+  color: #532e07;
+}
+.card_boost_three {
+  background-color: #bcec88;
+  color: #051d14;
+}
+.card_boost_four {
+  background-color: #0d5438;
+  color: white;
+}
+.boost_card_topic {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+}
+.boot_card_pera {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+.boost_card_btn {
+  background-color: #532e07;
+  color: white;
+  border: 1px solid #532e07;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+.boost_card_btn_last {
+  background-color: white;
+  color: #0d5438;
+  border: 1px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.boost_card_btn_thre {
+  background-color: #0d5438;
+  color: white;
+  border: 1px solid #0d5438;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+.boost_card_btn_thre:hover,
+.boost_card_btn_last:hover,
+.boost_card_btn:hover{
+  background-color: #051d14;
+  border: 1px solid #051d14;
+  color: white;
+  animation: 0.3 ease-in-out;
+}
+@media (max-width: 908px) {
+  /* .card_main {
+    padding: 0px 15px;
+    margin-bottom: 0px;
+  } */
+  .main_topic_boosting{
+    font-size: 30px;
+    width: 100%;
+  }
+  .para_boosting{
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  .boost_card{
+    width: 100%;
+  }
+}

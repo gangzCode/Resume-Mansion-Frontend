@@ -1,0 +1,12 @@
+.chat_pricee {
+  background: var(--surface-primary, #f5f6f4);
+}
+.chat_price_topic {
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 32px;
+  margin-bottom: 40px;
+}

@@ -1,0 +1,158 @@
+.paymnet_continer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: auto;
+  margin: 0 auto;
+}
+
+.paymnet_continer_main_card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 48px;
+  flex: 1 1;
+  padding: 100px 95px;
+}
+.paymnet_continer_main_card_subbb {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  gap: 48px;
+  /* padding: 0 0 0 100px; */
+}
+.paymnet_continer_main_card_two_subb {
+  margin: 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.paymnet_continer_main_card_two {
+  /* display: flex;
+  flex-direction: column;
+  align-items: flex-start; */
+
+  flex: 1;
+  width: 100%;
+  padding: 100px 95px;
+  background: var(--surface-secondary, #fff);
+}
+.paymnet_back_continer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.paymnet_continer_main_card_section_one {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 21px;
+}
+.paymnet_continer_main_card_section_two_topic {
+  color: #000;
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 28px;
+}
+.paymnet_continer_main_card_section_two {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  align-self: stretch;
+}
+.paymnet_continer_main_card_section_two_card {
+  display: flex;
+  padding: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  align-self: stretch;
+  border-radius: 16px;
+  width: 464px;
+  background: #fff;
+}
+.paymnet_continer_two_card_topic {
+  color: #000;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.paymnet_two_card_topic_subsection {
+  color: #000;
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 28px;
+}
+.paymnet_continer_two_card_topic_subsection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+.paymnet_two_card_price_subsection {
+  color: #000;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px;
+}
+.paymnet_two_card_two_section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+.paymnet_two_card_two_section_name {
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+}
+.paymnet_two_card_two_section_name_b {
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 28px;
+}
+@media (max-width: 950px) {
+  .paymnet_continer {
+    flex-direction: column;
+  }
+
+}
+@media (max-width: 650px) {
+  .paymnet_continer {
+    flex-direction: column;
+  }
+  .paymnet_continer_main_card{
+    padding: 24px;
+  }
+  .paymnet_continer_main_card_section_two_card,
+  .paymnet_continer_main_card_section_two,
+  .paymnet_continer_main_card_subbb,
+  .paymnet_continer_main_card{
+    width: 100%;
+  }
+}

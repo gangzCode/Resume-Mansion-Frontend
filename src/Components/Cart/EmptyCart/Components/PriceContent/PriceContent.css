@@ -1,0 +1,72 @@
+.price_card_update {
+  border-radius: 20px;
+  width: 366px;
+  padding: 24px;
+  background-color: #fff;
+  color: #051d14;
+  cursor: pointer;
+  gap: 24px;
+  justify-content: center;
+  align-items: start;
+  flex-direction: column;
+  display: flex;
+}
+.price_card_pera_update {
+  color: var(--text-secondary, #4b5852);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+.price_card_name_update {
+  color: var(--brand-secondary, #0d5438);
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 18px;
+}
+.price_card_sub_update {
+  color: var(--text-secondary, #4b5852);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+.sub_card_price_update {
+  display: flex;
+  width: 1162px;
+  padding: 24px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 24px;
+  background: var(--surface-secondary, #fff);
+}
+.pera_sub_price_update {
+  color: var(--text-secondary, #4b5852);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+.fm_price_update {
+  color: var(--brand-secondary, #0d5438);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+}
+@media (max-width: 1269px) {
+  .price_card_update {
+    width: 100%;
+  }
+  .sub_card_price_update {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 32px;
+  }
+}

@@ -1,0 +1,16 @@
+.mai_conet {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  color: #051D14;
+  cursor: pointer;
+}
+.lf{
+  padding-left: 5px;
+}

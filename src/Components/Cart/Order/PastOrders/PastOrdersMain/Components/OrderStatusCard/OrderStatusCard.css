@@ -1,0 +1,83 @@
+.OrderStatusCard {
+  display: flex;
+  width: 696px;
+  padding: 24px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 16px;
+  background: var(--surface-primary, #f5f6f4);
+}
+.OrderStatusCard_colum_one {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.OrderStatusCard_colum_one_topic {
+  color: var(--text-primary, #051d14);
+
+  /* Text md/Semibold */
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 150% */
+}
+.OrderStatusCard_colum_one_pera {
+  color: #000;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px; /* 150% */
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.OrderStatusCard_colum_two {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+}
+.OrderStatusCard_colum_two_status {
+  display: flex;
+  padding: 2px 8px;
+  align-items: center;
+  border-radius: 16px;
+  border: 1.5px solid var(--system-success, #3fae0c);
+  background: var(--text-success, #37a902);
+  color: var(--text-inverse-primary, #fff);
+  text-align: center;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 18px;
+}
+.OrderStatusCard_colum_two_status_can {
+  display: flex;
+  padding: 2px 8px;
+  align-items: center;
+  border-radius: 16px;
+  border: 1.5px solid var(--system-success, #d71d1d);
+  background: var(--text-success, #d71d1d);
+  color: var(--text-inverse-primary, #fff);
+  text-align: center;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 18px;
+}
+.OrderStatusCard_continer {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  flex-direction: column;
+  gap: 15px;
+}
+
+@media (max-width: 760px) {
+  .OrderStatusCard {
+    width: 100%;
+  }
+}

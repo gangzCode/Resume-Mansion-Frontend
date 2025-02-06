@@ -1,0 +1,9 @@
+.OrderPlacedHeroContiner_sub_new_topic {
+  color: var(--text-primary, #051d14);
+  font-family: Inter;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 44px; 
+  letter-spacing: -0.72px;
+}
