@@ -32,7 +32,7 @@ function Login() {
         login(token, info);
         setSuccess("Login successful!");
         console.log('gvgvgvgv',success)
-        navigate("/payment");
+        navigate("/");
       
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
