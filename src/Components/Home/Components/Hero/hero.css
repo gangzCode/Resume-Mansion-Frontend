@@ -65,7 +65,7 @@
 .price_card_container {
   width: 100%;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
   gap: 32px;
@@ -76,9 +76,9 @@
   padding: 24px;
   background-color: #051d14;
   color: white;
-
+  min-height: 914px;
   gap: 24px;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: start;
   flex-direction: column;
   display: flex;
@@ -107,10 +107,11 @@
 
 .pric_card_content_topic {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: start;
   gap: 8px;
   flex-direction: column;
+  min-height: 174px;
 }
 .price_card_item_continer {
   display: flex;
@@ -142,9 +143,9 @@
   width: 100%;
   border: 1px solid #bcec88;
 }
-.price_card_btn:hover{
-  background-color: #FFEB69;
-  border: 1px solid #FFEB69;
+.price_card_btn:hover {
+  background-color: #ffeb69;
+  border: 1px solid #ffeb69;
 }
 .price_card_sub {
   font-size: 14px;

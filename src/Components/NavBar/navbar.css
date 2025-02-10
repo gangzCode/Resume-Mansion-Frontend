@@ -197,6 +197,72 @@
 .services_dropdown_mobile {
   padding-left: 25px;
 }
+
+.user-icon-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.user-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 240px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px 0;
+  z-index: 1000;
+}
+
+.user-info {
+  padding: 12px 16px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #051d14;
+  margin: 0;
+  font-size: 14px;
+}
+
+.user-email {
+  color: #666;
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.menu-divider {
+  height: 1px;
+  background: #eee;
+  margin: 8px 0;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #051d14;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: #f5f5f5;
+}
+
+.menu-item.logout {
+  color: #dc3545;
+}
+
+.menu-item.login {
+  color: #237655;
+  font-weight: 600;
+}
+
 /* Mobile Styles */
 @media (max-width: 1272px) {
   .nav_item_set {

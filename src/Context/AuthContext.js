@@ -1,62 +1,40 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
 
-const AuthContext = createContext();
-
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedData = localStorage.getItem("user");
-    if (savedData) {
-      try {
-        const { token, user } = JSON.parse(savedData);
-        const decodedToken = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        if (decodedToken.exp > currentTime) {
-          setUser({ ...decodedToken, ...user });
-        } else {
-          console.error("Token expired");
-          logout();
-        }
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        logout();
-      }
+    // Check if user is logged in on component mount
+    const token = localStorage.getItem("token");
+    const userInfo = localStorage.getItem("userInfo");
+    if (token && userInfo) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userInfo));
     }
   }, []);
 
-  const login = (token, user) => {
-    if (!token || token.split('.').length !== 3) {
-      console.error("Invalid token format");
-      return;
-    }
-  
-    try {
-      const decodedToken = jwtDecode(token);
-      setUser({ ...decodedToken, ...user });
-  
-      localStorage.setItem("user", JSON.stringify({ token, user }));
-    } catch (error) {
-      console.error("Error during login:", error);
-    }
+  const login = (token, userInfo) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+    setIsAuthenticated(true);
+    setUser(userInfo);
   };
-  
-  
 
   const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
+    setIsAuthenticated(false);
     setUser(null);
-
-    localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

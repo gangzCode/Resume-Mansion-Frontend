@@ -25,6 +25,7 @@ import IndustryBase from "./Components/Services/IndustryBase/IndustryBase";
 import Cookies from "./Components/Cookies/Cookies";
 import NavBar from "./Components/NavBar/NavBar";
 import { AuthProvider } from "./Context/AuthContext";
+import ProtectedRoute from "./Components/ProtectedRoute";
 
 function App() {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
@@ -46,11 +47,43 @@ function App() {
       {isFirstVisit && <Cookies onClose={handleCloseCookies} />}
       <NavBar />
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Protected routes */}
+        <Route
+          path="/payment"
+          element={
+            <ProtectedRoute>
+              <Payment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/currentOrder"
+          element={
+            <ProtectedRoute>
+              <OrderPlaced />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/previousOrders"
+          element={
+            <ProtectedRoute>
+              <PastOrdersMain />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/servicess" element={<Services />} />
         <Route path="/resumeWriting" element={<ResumeWriting />} />
         <Route path="/coverLetter" element={<CoverLetterwriting />} />
-        <Route path="/linkedInOptimization" element={<LinkedInOptimization />} />
+        <Route
+          path="/linkedInOptimization"
+          element={<LinkedInOptimization />}
+        />
         <Route path="/careerAdvice" element={<CareerAdvice />} />
         <Route path="/blogPostPage" element={<BlogPostPage />} />
         <Route path="/about" element={<About />} />
@@ -63,11 +96,6 @@ function App() {
         {/* Cart Routes */}
         <Route path="/emptyCart" element={<EmptyCart />} />
         <Route path="/itemCart" element={<ItemCart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/currentOrder" element={<OrderPlaced />} />
-        <Route path="/previousOrders" element={<PastOrdersMain />} />
         <Route path="/pastOrders" element={<PastOrdersSub />} />
       </Routes>
     </AuthProvider>
