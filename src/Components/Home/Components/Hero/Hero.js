@@ -35,7 +35,6 @@ function Hero() {
     fetchPackages();
   }, []);
 
-  if (loading) return <div>Loading packages...</div>;
   if (error) return <div>{error}</div>;
 
   return (

@@ -14,6 +14,7 @@ function NavBar() {
   const [isHovered, setIsHovered] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleMouseEnter = () => {
     setServicesOpen(true);
@@ -28,8 +29,13 @@ function NavBar() {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = () => {
     logout();
+    setShowLogoutConfirm(false);
     window.location.href = "/";
   };
   // Handle scroll behavior
@@ -46,6 +52,14 @@ function NavBar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
+
+  useEffect(() => {
+    if (location.pathname === "/login" || location.pathname === "/register") {
+      setIsVisible(false);
+    } else {
+      setIsVisible(true);
+    }
+  }, [location.pathname]);
 
   const isActive = (path) =>
     location.pathname === path ? "nav_item_Active" : "";
@@ -306,6 +320,11 @@ function NavBar() {
                     className="icon_set"
                     onMouseEnter={() => setShowUserMenu(true)}
                     onMouseLeave={() => setShowUserMenu(false)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        window.location.href = "/login";
+                      }
+                    }}
                   >
                     <div className="user-icon-container">
                       <svg
@@ -337,43 +356,6 @@ function NavBar() {
                           </clipPath>
                         </defs>
                       </svg>
-
-                      {showUserMenu && (
-                        <div className="user-menu">
-                          {isAuthenticated ? (
-                            <>
-                              <div className="user-info">
-                                <p className="user-name">{user?.full_name}</p>
-                                <p className="user-email">{user?.email}</p>
-                                <p className="user-email">{user?.contact_no}</p>
-                              </div>
-                              {/* <div className="menu-divider"></div> */}
-                              {/* <button
-                                className="menu-item"
-                                onClick={() =>
-                                  (window.location.href = "/orders")
-                                }
-                              >
-                                My Orders
-                              </button> */}
-                              <div className="menu-divider"></div>
-                              <button
-                                className="menu-item logout"
-                                onClick={handleLogout}
-                              >
-                                Logout
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              className="menu-item login"
-                              onClick={() => (window.location.href = "/login")}
-                            >
-                              Login
-                            </button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div
@@ -416,6 +398,16 @@ function NavBar() {
                   >
                     Order Now
                   </button>
+
+                  {isAuthenticated && (
+                    <button
+                      className="logout_btn_nav"
+                      onClick={handleLogoutClick}
+                    >
+                      Log Out
+                    </button>
+                  )}
+
                   {sidebarOpen ? (
                     <div className="hamburger_icon" onClick={toggleSidebar}>
                       <svg
@@ -644,6 +636,52 @@ function NavBar() {
           >
             Order Now
           </button>
+        </div>
+      )}
+      {showLogoutConfirm && (
+        <div className="logout_popup_overlay">
+          <div className="logout_popup">
+            <div className="logout_popup_header">
+              <h4>Confirm Logout</h4>
+              <button
+                className="close_button"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="#666666"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="logout_popup_content">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="24" fill="#FFF5F5" />
+                <path
+                  d="M24 12L24 26M24 36L24 32"
+                  stroke="#DC2626"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <p>Are you sure you want to log out from your account?</p>
+            </div>
+            <div className="logout_popup_actions">
+              <button
+                className="cancel_button"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button className="logout_button" onClick={handleLogoutConfirm}>
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

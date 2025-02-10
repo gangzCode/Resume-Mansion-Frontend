@@ -147,3 +147,20 @@ export const getPackageAddons = async (packageId) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const uploadCV = async (file, email) => {
+  try {
+    const formData = new FormData();
+    formData.append("doc", file);
+    formData.append("email", email);
+
+    const response = await axios.post(`${baseUrl}/cv/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};

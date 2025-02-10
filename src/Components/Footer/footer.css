@@ -68,7 +68,7 @@
   font-weight: 400;
   font-size: 16px;
 }
-.footer_nav_item:hover{
+.footer_nav_item:hover {
   text-decoration: underline;
 }
 .Copyright {
@@ -138,9 +138,25 @@
   color: #051d14;
   font-size: 14px;
 }
-.comname_our{
+.comname_our {
   font-weight: bold;
   cursor: pointer;
+}
+.error_message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.alert_input_field:focus {
+  border-color: #237655;
+  outline: none;
+}
+
+.alert_box_two_btn_two:disabled,
+.alert_box_two_btn_one:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 @media (max-width: 1260px) {
   .main_row_footer_container {
@@ -180,5 +196,72 @@
   }
   .footer_box {
     width: 100%;
+  }
+}
+
+.success_popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.success_content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+}
+
+.success_message_container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.success_icon {
+  flex-shrink: 0;
+}
+
+.success_message h4 {
+  margin: 0;
+  color: #0d5438;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.success_message p {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.success_close_btn {
+  width: 100%;
+  padding: 8px;
+  background: #0d5438;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.success_close_btn:hover {
+  background: #0a4029;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
