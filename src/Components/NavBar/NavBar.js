@@ -41,10 +41,13 @@ function NavBar() {
   // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > lastScrollY && window.scrollY > 100) {
-        setIsVisible(false); // Scrolling down - hide navbar
+      if (
+        (window.scrollY > lastScrollY && window.scrollY > 100) ||
+        location.pathname === "/itemCart"
+      ) {
+        setIsVisible(false);
       } else {
-        setIsVisible(true); // Scrolling up - show navbar
+        setIsVisible(true);
       }
       setLastScrollY(window.scrollY);
     };
@@ -54,7 +57,11 @@ function NavBar() {
   }, [lastScrollY]);
 
   useEffect(() => {
-    if (location.pathname === "/login" || location.pathname === "/register") {
+    if (
+      location.pathname === "/login" ||
+      location.pathname === "/register" ||
+      location.pathname === "/itemCart"
+    ) {
       setIsVisible(false);
     } else {
       setIsVisible(true);

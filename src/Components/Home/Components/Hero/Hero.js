@@ -3,11 +3,13 @@ import "./hero.css";
 import Pop from "./img/pop.png";
 import { getPackages } from "../../../../Services/apiCalls";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../../../Context/AuthContext";
 
 function Hero() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAuthenticated } = useAuth();
 
   const navigate = useNavigate();
 
@@ -70,15 +72,20 @@ function Hero() {
                   </div>
                   <button
                     className="price_card_btn"
-                    onClick={() =>
-                      navigate(`/itemCart`, {
-                        state: {
-                          packageId: pkg.id,
-                          title: pkg.title,
-                          price: pkg.price,
-                        },
-                      })
-                    }
+                    onClick={() => {
+                      if (isAuthenticated) {
+                        navigate(`/itemCart`, {
+                          state: {
+                            packageId: pkg.id,
+                            title: pkg.title,
+                            price: pkg.price,
+                            shortDescription: pkg.short_description,
+                          },
+                        });
+                      } else {
+                        navigate("/login");
+                      }
+                    }}
                   >
                     Choose
                   </button>

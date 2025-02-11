@@ -259,6 +259,12 @@ function CartNav() {
                         </defs>
                       </svg>
                     </div>
+                    <button
+                      className="order_btn_nav nroml_verson"
+                      onClick={() => (window.location.href = "/emptyCart")}
+                    >
+                      Order Now
+                    </button>
                     {/* <button className='order_btn_nav nroml_verson'>Order Now</button> */}
                     {sidebarOpen ? (
                       <div className="hamburger_icon" onClick={toggleSidebar}>

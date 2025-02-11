@@ -8,7 +8,12 @@ function CartContiner() {
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const location = useLocation();
-  const { packageId, title: pkgTitle, price: pkgPrice } = location.state || [];
+  const {
+    packageId,
+    title: pkgTitle,
+    price: pkgPrice,
+    shortDescription,
+  } = location.state || [];
 
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [topic, setTopic] = useState("");
@@ -363,12 +368,11 @@ function CartContiner() {
                 <div class="cart_card Career_Starter">
                   <div class="cart_card_section_one">
                     <p class="cart_card_section_one_topic">{pkgTitle}</p>
-                    <p class="cart_card_section_one_close_price">${pkgPrice}</p>
+                    <p class="cart_card_section_one_close_price">
+                      {pkgPrice && "$" + pkgPrice}
+                    </p>
                   </div>
-                  <p class="cart_card_pera">
-                    A keyword optimised resume that will get you past all the
-                    filters.
-                  </p>
+                  <p class="cart_card_pera">{shortDescription}</p>
                 </div>
                 {cart.map((item, index) => (
                   <div className="cart_card">
@@ -492,29 +496,36 @@ function CartContiner() {
                         your chances!
                       </p>
                     </div>
-                    {addons.map((addon) => (
-                      <div key={addon.id} className="enhance_section_cart_card">
-                        <div className="enhance_section_cart_card_topic_set">
-                          <p className="enhance_section_cart_card_topic">
-                            {addon.title}
-                          </p>
-                          <p className="enhance_section_cart_card_pera">
-                            {addon.description}
-                          </p>
+                    {addons
+                      .filter(
+                        (addon) => !cart.some((item) => item.id === addon.id)
+                      )
+                      .map((addon) => (
+                        <div
+                          key={addon.id}
+                          className="enhance_section_cart_card"
+                        >
+                          <div className="enhance_section_cart_card_topic_set">
+                            <p className="enhance_section_cart_card_topic">
+                              {addon.title}
+                            </p>
+                            <p className="enhance_section_cart_card_pera">
+                              {addon.description}
+                            </p>
+                          </div>
+                          <div className="new_item_set">
+                            <p className="enhance_section_cart_card_price">
+                              +${addon.price}
+                            </p>
+                            <button
+                              className="enhance_section_cart_btn"
+                              onClick={() => addToCart(addon)}
+                            >
+                              Add to cart
+                            </button>
+                          </div>
                         </div>
-                        <div className="new_item_set">
-                          <p className="enhance_section_cart_card_price">
-                            +${addon.price}
-                          </p>
-                          <button
-                            className="enhance_section_cart_btn"
-                            onClick={() => addToCart(addon)}
-                          >
-                            Add to cart
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </>
                 )}
               </div>
