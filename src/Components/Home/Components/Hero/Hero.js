@@ -143,6 +143,7 @@ function Hero() {
                           state: {
                             packageId: packages[3].id,
                             title: packages[3].title,
+                            shortDescription: packages[3].short_description,
                           },
                         })
                       }
