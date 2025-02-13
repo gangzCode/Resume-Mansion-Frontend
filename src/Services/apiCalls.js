@@ -173,12 +173,17 @@ export const addToCartService = async (cartData) => {
       throw new Error("Authentication token not found");
     }
 
+    console.log("CART DATA>>> " + JSON.stringify(cartData));
+
     const response = await axios.post(`${baseUrl}/add-to-cart`, cartData, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
+
+    console.log("RESPONSE ADD TO CART>>> " + JSON.stringify(response.data));
+
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
@@ -208,7 +213,7 @@ export const getCartItems = async () => {
   }
 };
 
-export const clearCart = async (cartId) => {
+export const clearCart = async () => {
   try {
     const token = localStorage.getItem("token");
 
@@ -216,11 +221,12 @@ export const clearCart = async (cartId) => {
       throw new Error("Authentication token not found");
     }
 
-    const response = await axios.delete(`${baseUrl}/cart/clear/{${cartId}}`, {
+    const response = await axios.delete(`${baseUrl}/cart/clear/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("RESPONSE CLEAR CART>>> " + response.data);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;

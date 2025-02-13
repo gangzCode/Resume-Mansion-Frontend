@@ -340,7 +340,12 @@ function CartContiner() {
   };
 
   const handleReadyToPay = async () => {
-    if (!isTermsAccepted) {
+    if (isTermsAccepted) {
+      // Save cart total and details to localStorage before navigation
+      localStorage.setItem("totalAmount", total.toString());
+      localStorage.setItem("getTopic", topic);
+      localStorage.setItem("getCount", getTotalCount().toString());
+
       navigate("/payment");
     }
     setError(null);
@@ -747,7 +752,7 @@ function CartContiner() {
                         />
                       </svg>
                       <p className="detail_cart_top_data_pera">
-                        2-day delivery
+                        {packageId === 4 ? "1-day delivery" : "2-day delivery"}
                       </p>
                     </div>
                     <div className="detail_cart_top_data">
@@ -957,7 +962,7 @@ function CartContiner() {
                   onClick={handleReadyToPay}
                   disabled={!isTermsAccepted || isSubmitting}
                 >
-                  I'm Ready to Pay"
+                  I'm Ready to Pay
                 </button>
               </div>
             </div>

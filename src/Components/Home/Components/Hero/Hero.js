@@ -49,7 +49,7 @@ function Hero() {
     }
 
     try {
-      // await clearCart();
+      await clearCart();
       localStorage.removeItem("selectedPackage");
 
       const cartData = {

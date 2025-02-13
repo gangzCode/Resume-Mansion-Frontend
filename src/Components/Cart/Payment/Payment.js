@@ -7,6 +7,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe(
   "pk_test_51Qs8F6GOnA0yDA3w8Ljn86f8Tq4zYizAL2Y0beZ2f6a8bOKsjfAdTpzSgu7Y7azVA23JmmxRjwaV0QMNtvz1NFyA00IKHaUB5V"
@@ -243,22 +244,30 @@ const CheckoutForm = ({ total }) => {
 
 function Payment() {
   const [total, setTotal] = useState(0);
-  const [topic, setTopic] = useState(0);
+  const [topic, setTopic] = useState("");
   const [count, setCount] = useState(0);
+  const navigate = useNavigate();
+
   useEffect(() => {
+    // Get values from localStorage
     const savedTotal = localStorage.getItem("totalAmount");
-    if (savedTotal) {
-      setTotal(parseFloat(savedTotal));
-    }
     const savedTopic = localStorage.getItem("getTopic");
-    if (savedTopic) {
-      setTopic(savedTopic);
-    }
     const savedCount = localStorage.getItem("getCount");
-    if (savedCount) {
-      setCount(savedCount);
+
+    if (!savedTotal) {
+      // Redirect back to cart if no total found
+      navigate("/itemCart");
+      return;
     }
-  }, []);
+
+    setTotal(parseFloat(savedTotal));
+    setTopic(savedTopic || "");
+    setCount(parseInt(savedCount || "0"));
+  }, [navigate]);
+
+  const handleBackClick = () => {
+    navigate("/itemCart");
+  };
 
   return (
     <div className="class_continer emptycart_bk">
@@ -270,7 +279,7 @@ function Payment() {
                 <div className="paymnet_continer_main_card_section_one">
                   <div
                     className="paymnet_back_continer"
-                    onClick={() => (window.location.href = "/login")}
+                    onClick={handleBackClick}
                   >
                     <div>
                       <svg
@@ -385,7 +394,7 @@ function Payment() {
                   </p>
                   <div className="paymnet_continer_main_card_section_two_card">
                     <p className="paymnet_continer_two_card_topic">
-                      {count} item
+                      {count} {count === 1 ? "item" : "items"}
                     </p>
                     <div className="paymnet_continer_two_card_topic_subsection">
                       <div className="paymnet_two_card_topic_subsection">
@@ -430,7 +439,7 @@ function Payment() {
                         {topic}
                       </div>
                       <p className="paymnet_two_card_price_subsection">
-                        ${total}
+                        ${total.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -441,7 +450,7 @@ function Payment() {
                         Sub Total
                       </p>
                       <p className="paymnet_two_card_two_section_name">
-                        ${total}
+                        ${total.toFixed(2)}
                       </p>
                     </div>
                     <div className="paymnet_two_card_two_section">
@@ -449,7 +458,7 @@ function Payment() {
                         Total Amount
                       </p>
                       <p className="paymnet_two_card_two_section_name_b">
-                        ${total}
+                        ${total.toFixed(2)}
                       </p>
                     </div>
                   </div>
