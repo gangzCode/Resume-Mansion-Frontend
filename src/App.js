@@ -26,6 +26,7 @@ import Cookies from "./Components/Cookies/Cookies";
 import NavBar from "./Components/NavBar/NavBar";
 import { AuthProvider } from "./Context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import UnauthenticatedRoute from "./Components/UnauthenticatedRoute";
 
 function App() {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
@@ -47,20 +48,25 @@ function App() {
       {isFirstVisit && <Cookies onClose={handleCloseCookies} />}
       <NavBar />
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected routes */}
         <Route
-          path="/payment"
+          path="/login"
           element={
-            <ProtectedRoute>
-              <Payment />
-            </ProtectedRoute>
+            <UnauthenticatedRoute>
+              <Login />
+            </UnauthenticatedRoute>
           }
         />
+        <Route
+          path="/register"
+          element={
+            <UnauthenticatedRoute>
+              <Register />
+            </UnauthenticatedRoute>
+          }
+        />
+
+        <Route path="/payment" element={<Payment />} />
         <Route
           path="/currentOrder"
           element={

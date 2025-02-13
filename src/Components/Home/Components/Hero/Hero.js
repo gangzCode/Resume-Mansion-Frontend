@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./hero.css";
 import Pop from "./img/pop.png";
-import { getPackages } from "../../../../Services/apiCalls";
+import {
+  getPackages,
+  addToCartService,
+  clearCart,
+} from "../../../../Services/apiCalls";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../../Context/AuthContext";
 
@@ -10,6 +14,7 @@ function Hero() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
+  const [cartItems, setCartItems] = useState([]);
 
   const navigate = useNavigate();
 
@@ -37,6 +42,43 @@ function Hero() {
     fetchPackages();
   }, []);
 
+  const handlePackageSelect = async (pkg) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // await clearCart();
+      localStorage.removeItem("selectedPackage");
+
+      const cartData = {
+        final_total: pkg.price.toString(),
+        currency_symbol: "$",
+        currency: "usd",
+        package_id: pkg.id,
+        addon_id: null,
+        quantity: 1,
+        amount: pkg.price.toString(),
+      };
+
+      await addToCartService(cartData);
+
+      const packageDetails = {
+        id: pkg.id,
+        title: pkg.title,
+        price: pkg.price,
+        shortDescription: pkg.short_description,
+      };
+      localStorage.setItem("selectedPackage", JSON.stringify(packageDetails));
+
+      navigate("/itemCart");
+    } catch (error) {
+      setError("Failed to add package to cart");
+      console.error("Add to cart error:", error);
+    }
+  };
+
   if (error) return <div>{error}</div>;
 
   return (
@@ -58,7 +100,32 @@ function Hero() {
               {packages.slice(0, 3).map((pkg) => (
                 <div className="price_card" key={pkg.id}>
                   <div className="pric_card_content_topic">
-                    <p className="price_card_topic">{pkg.title}</p>
+                    <div className="topoc">
+                      <p className="price_card_topic">{pkg.title}</p>
+                      {pkg.is_popular === 1 && (
+                        <>
+                          <div className="pop_image">
+                            <div className="most_batch">
+                              <p className="most_batch_topic">Most Popular</p>
+                            </div>
+                          </div>
+                          <div className="most_svg">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="14"
+                              viewBox="0 0 18 14"
+                              fill="none"
+                            >
+                              <path
+                                d="M10.5 13.5L0 0L17.5 1.5L10.5 13.5Z"
+                                fill="#AA1111"
+                              />
+                            </svg>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <div
                       className="price_card_pera"
                       dangerouslySetInnerHTML={{
@@ -67,25 +134,22 @@ function Hero() {
                     />
                   </div>
                   <div className="pric_card_content">
-                    <p className="price_card_name">Investment</p>
-                    <p className="price_card_price">${pkg.price}</p>
+                    {/* <p className="price_card_name">Investment</p>
+                    <p className="price_card_price">${pkg.price}</p> */}
+
+                    <div className="price_set_card">
+                      <p className="price_card_name">Investment</p>
+                      {pkg.discount && <p className="price_off">50% OFF</p>}
+                    </div>
+
+                    <div className="price_drop">
+                      <p className="price_card_price">${pkg.price}</p>
+                      {pkg.discount && <p className="dropp_price">$300</p>}
+                    </div>
                   </div>
                   <button
                     className="price_card_btn"
-                    onClick={() => {
-                      if (isAuthenticated) {
-                        navigate(`/itemCart`, {
-                          state: {
-                            packageId: pkg.id,
-                            title: pkg.title,
-                            price: pkg.price,
-                            shortDescription: pkg.short_description,
-                          },
-                        });
-                      } else {
-                        navigate("/login");
-                      }
-                    }}
+                    onClick={() => handlePackageSelect(pkg)}
                   >
                     Choose
                   </button>
@@ -138,15 +202,7 @@ function Hero() {
                     </div>
                     <button
                       className="sub_card_btn_price"
-                      onClick={() =>
-                        navigate(`/itemCart`, {
-                          state: {
-                            packageId: packages[3].id,
-                            title: packages[3].title,
-                            shortDescription: packages[3].short_description,
-                          },
-                        })
-                      }
+                      onClick={() => handlePackageSelect(packages[3])}
                     >
                       Choose
                     </button>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./CartContiner.css";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import {
   getPackageAddons,
   addToCart,
@@ -11,17 +11,12 @@ function CartContiner() {
   const [quantity, setQuantity] = useState(1);
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
-  const location = useLocation();
-  const {
-    packageId,
-    title: pkgTitle,
-    price: pkgPrice,
-    shortDescription,
-  } = location.state || [];
 
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [topic, setTopic] = useState("");
   const [price, setPrice] = useState("");
+  const [packageId, setpackageId] = useState("");
+  const [pkgShortDesc, setpkgShortDesc] = useState("");
 
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,11 +30,23 @@ function CartContiner() {
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState(null);
 
+  const navigate = useNavigate();
+
+  const [packageDetails, setPackageDetails] = useState(null);
+
   useEffect(() => {
-    setTopic(pkgTitle);
-    if (pkgPrice !== undefined) {
-      setPrice(pkgPrice);
-      setTotal(pkgPrice);
+    const storedPackage = localStorage.getItem("selectedPackage");
+
+    if (storedPackage) {
+      const parsedPackage = JSON.parse(storedPackage);
+
+      console.log(parsedPackage.id, "parsedPackage");
+      setPackageDetails(parsedPackage);
+      setpackageId(parsedPackage.id);
+      setTopic(parsedPackage.title);
+      setpkgShortDesc(parsedPackage.shortDescription);
+      setPrice(parsedPackage.price);
+      setTotal(parsedPackage.price);
     } else {
       setPrice(0);
       setTotal(0);
@@ -47,15 +54,10 @@ function CartContiner() {
   }, []);
 
   useEffect(() => {
-    console.log(price, "price");
-  }, [price]);
-
-  useEffect(() => {
     const fetchAddons = async () => {
       try {
         if (packageId) {
           const response = await getPackageAddons(packageId);
-          // Remove the first item since it's the package itself
           const addonsList = response.slice(1);
           setAddons(addonsList);
         }
@@ -109,53 +111,14 @@ function CartContiner() {
   };
 
   const addToCart = async (service) => {
-    setIsSubmitting(true);
-    try {
-      const cartData = {
-        final_total: (total + service.price).toString(),
-        currency_symbol: "$",
-        currency: "USD",
-        coupon_id: promoCode,
-        packages: [
-          ...(packageId
-            ? [
-                {
-                  package_id: packageId,
-                  addon_id: packageId,
-                  quantity: 1,
-                  amount: pkgPrice.toString(),
-                },
-              ]
-            : []),
-          {
-            package_id: packageId,
-            addon_id: service.id,
-            quantity: 1,
-            amount: service.price.toString(),
-          },
-        ],
-      };
+    const updatedCart = [...cart, { ...service, quantity: 1 }];
+    const cartTotal = updatedCart.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
 
-      console.log(cartData, "carerafasdf");
-
-      const response = await addToCart(cartData);
-
-      const updatedCart = [...cart, { ...service, quantity: 1 }];
-      const cartTotal = updatedCart.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0
-      );
-
-      setCart(updatedCart);
-      setTotal(cartTotal + price);
-
-      setError(null);
-    } catch (err) {
-      setError("Failed to add item to cart. Please try again.");
-      console.error("Add to cart error:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setCart(updatedCart);
+    setTotal(cartTotal + price);
   };
 
   const removeFromCart = (id) => {
@@ -377,49 +340,10 @@ function CartContiner() {
   };
 
   const handleReadyToPay = async () => {
-    if (!isTermsAccepted) return;
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const cartData = {
-        final_total: total.toString(),
-        currency_symbol: "$",
-        currency: "USD",
-        coupon_id: null,
-        packages: [
-          {
-            package_id: packageId,
-            addon_id: packageId,
-            quantity: 1,
-            amount: pkgPrice.toString(),
-          },
-          ...cart.map((item) => ({
-            package_id: packageId,
-            addon_id: item.id,
-            quantity: item.quantity,
-            amount: item.price.toString(),
-          })),
-        ],
-      };
-
-      console.log("Cart data:", cartData);
-
-      const response = await addToCart(cartData);
-
-      localStorage.setItem("totalAmount", total);
-      localStorage.setItem("getTopic", topic);
-      localStorage.setItem("getCount", getTotalCount());
-      localStorage.setItem("orderId", response.data.order.id);
-
-      window.location.href = "/login";
-    } catch (err) {
-      setError(err.message || "Failed to process cart. Please try again.");
-      console.error("Cart submission error:", err);
-    } finally {
-      setIsSubmitting(false);
+    if (!isTermsAccepted) {
+      navigate("/payment");
     }
+    setError(null);
   };
 
   // Calculate total count of all items in the cart
@@ -465,12 +389,12 @@ function CartContiner() {
 
                 <div class="cart_card Career_Starter">
                   <div class="cart_card_section_one">
-                    <p class="cart_card_section_one_topic">{pkgTitle}</p>
+                    <p class="cart_card_section_one_topic">{topic}</p>
                     <p class="cart_card_section_one_close_price">
-                      {pkgPrice && "$" + pkgPrice}
+                      {price && "$" + price}
                     </p>
                   </div>
-                  <p class="cart_card_pera">{shortDescription}</p>
+                  <p class="cart_card_pera">{pkgShortDesc}</p>
                 </div>
                 {cart.map((item, index) => (
                   <div className="cart_card">
@@ -1033,7 +957,7 @@ function CartContiner() {
                   onClick={handleReadyToPay}
                   disabled={!isTermsAccepted || isSubmitting}
                 >
-                  {isSubmitting ? "Processing..." : "I'm Ready to Pay"}
+                  I'm Ready to Pay"
                 </button>
               </div>
             </div>

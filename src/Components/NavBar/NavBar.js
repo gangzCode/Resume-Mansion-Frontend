@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./navbar.css";
 import { FaArrowRight } from "react-icons/fa";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
+import { getCartItems } from "../../Services/apiCalls";
 
 function NavBar() {
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -15,6 +16,7 @@ function NavBar() {
   const { isAuthenticated, user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const navigate = useNavigate();
 
   const handleMouseEnter = () => {
     setServicesOpen(true);
@@ -38,6 +40,17 @@ function NavBar() {
     setShowLogoutConfirm(false);
     window.location.href = "/";
   };
+
+  const handleCartClick = async () => {
+    try {
+      const cartResponse = await getCartItems();
+      navigate(cartResponse.data !== undefined ? "/itemCart" : "/emptyCart");
+    } catch (error) {
+      console.error("Failed to check cart:", error);
+      navigate("/emptyCart");
+    }
+  };
+
   // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -60,7 +73,8 @@ function NavBar() {
     if (
       location.pathname === "/login" ||
       location.pathname === "/register" ||
-      location.pathname === "/itemCart"
+      location.pathname === "/itemCart" ||
+      location.pathname === "/emptyCart"
     ) {
       setIsVisible(false);
     } else {
@@ -365,10 +379,7 @@ function NavBar() {
                       </svg>
                     </div>
                   </div>
-                  <div
-                    className="icon_set"
-                    onClick={() => (window.location.href = "/emptyCart")}
-                  >
+                  <div className="icon_set" onClick={() => handleCartClick()}>
                     <svg
                       width="32"
                       height="32"

@@ -165,11 +165,18 @@ export const uploadCV = async (file, email) => {
   }
 };
 
-export const addToCart = async (cartData) => {
+export const addToCartService = async (cartData) => {
   try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
     const response = await axios.post(`${baseUrl}/add-to-cart`, cartData, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
@@ -181,6 +188,39 @@ export const addToCart = async (cartData) => {
 export const validatePromoCode = async (code) => {
   try {
     const response = await axios.get(`${baseUrl}/coupon?coupon=${code}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const getCartItems = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${baseUrl}/get-cart`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const clearCart = async (cartId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+
+    const response = await axios.delete(`${baseUrl}/cart/clear/{${cartId}}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;

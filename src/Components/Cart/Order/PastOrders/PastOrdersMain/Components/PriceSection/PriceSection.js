@@ -77,7 +77,7 @@ function PriceSection() {
                                     <div className='pric_card_content'>
                                         <div className='price_set_card'>
                                             <p className='price_card_name_update'>Investment</p>
-                                            <p className='price_off'>50% OFF</p>
+                                            <p className='price_off'>50% OFF</p> 
                                         </div>
 
                                         <div className='price_drop'>
