@@ -14,7 +14,7 @@
   line-height: 44px;
   letter-spacing: -0.72px;
 }
-.con_new_add_data_lis_cart{
+.con_new_add_data_lis_cart {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -283,7 +283,7 @@ input[type="number"] {
   font-weight: 600;
   line-height: 28px;
 }
-.cart_continer_main_card_topsetion_topic_new_one{
+.cart_continer_main_card_topsetion_topic_new_one {
   margin-bottom: 16px;
 }
 .cart_continer_main_card_topsetion {
@@ -393,7 +393,7 @@ input[type="number"] {
 .pro_close_btn {
   cursor: pointer;
 }
-.new_m_add{
+.new_m_add {
   margin-top: 15px;
 }
 .procode_cont {
@@ -484,6 +484,51 @@ input[type="number"] {
   line-height: 20px;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
 }
+
+.redybtn_cart_disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #ccc;
+}
+
+.redybtn_cart {
+  transition: all 0.3s ease;
+}
+.enhance_section_cart_btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #ccc;
+}
+
+.enhance_section_cart_btn {
+  transition: all 0.3s ease;
+}
+
+.promo_error_message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.promo_card_add_btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.amounr_box_card_data.discount {
+  color: #16a34a;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.amounr_box_card_data.total {
+  font-weight: 600;
+}
+
 @media (max-width: 1456px) {
   .cart_continer_main {
     flex-wrap: wrap;
@@ -505,7 +550,7 @@ input[type="number"] {
   .enhance_section_cart_card {
     flex-wrap: wrap;
   }
-  .new_item_set{
+  .new_item_set {
     align-items: center;
     justify-content: space-between;
     width: 100%;
@@ -518,7 +563,7 @@ input[type="number"] {
     gap: 15px;
   }
 }
-.new_item_set{
+.new_item_set {
   align-items: center;
   gap: 25px;
   display: flex;
@@ -530,8 +575,7 @@ input[type="number"] {
   .enhance_section_cart,
   .cart_continer_main_card_one,
   .enhance_section_cart_card_pera,
-  .enhance_section_cart_topic_set{
+  .enhance_section_cart_topic_set {
     width: 100%;
   }
- 
 }

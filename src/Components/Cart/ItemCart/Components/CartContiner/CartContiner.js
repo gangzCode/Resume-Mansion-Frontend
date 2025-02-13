@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./CartContiner.css";
 import { useLocation } from "react-router";
-import { getPackageAddons } from "../../../../../Services/apiCalls";
+import {
+  getPackageAddons,
+  addToCart,
+  validatePromoCode,
+} from "../../../../../Services/apiCalls";
 
 function CartContiner() {
   const [quantity, setQuantity] = useState(1);
@@ -21,12 +25,25 @@ function CartContiner() {
 
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState(null);
 
   useEffect(() => {
     setTopic(pkgTitle);
-
-    setPrice(pkgPrice);
-    setTotal(pkgPrice);
+    if (pkgPrice !== undefined) {
+      setPrice(pkgPrice);
+      setTotal(pkgPrice);
+    } else {
+      setPrice(0);
+      setTotal(0);
+    }
   }, []);
 
   useEffect(() => {
@@ -91,24 +108,54 @@ function CartContiner() {
     setTotal(cartTotal + price); // Include default price in total
   };
 
-  const addToCart = (service) => {
-    const existingItem = cart.find((item) => item.id === service.id);
+  const addToCart = async (service) => {
+    setIsSubmitting(true);
+    try {
+      const cartData = {
+        final_total: (total + service.price).toString(),
+        currency_symbol: "$",
+        currency: "USD",
+        coupon_id: promoCode,
+        packages: [
+          ...(packageId
+            ? [
+                {
+                  package_id: packageId,
+                  addon_id: packageId,
+                  quantity: 1,
+                  amount: pkgPrice.toString(),
+                },
+              ]
+            : []),
+          {
+            package_id: packageId,
+            addon_id: service.id,
+            quantity: 1,
+            amount: service.price.toString(),
+          },
+        ],
+      };
 
-    let updatedCart;
-    if (existingItem) {
-      updatedCart = cart.map((item) =>
-        item.id === service.id ? { ...item, quantity: item.quantity + 1 } : item
+      console.log(cartData, "carerafasdf");
+
+      const response = await addToCart(cartData);
+
+      const updatedCart = [...cart, { ...service, quantity: 1 }];
+      const cartTotal = updatedCart.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
       );
-    } else {
-      updatedCart = [...cart, { ...service, quantity: 1 }];
-    }
 
-    const cartTotal = updatedCart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    setCart(updatedCart);
-    setTotal(cartTotal + price); // Include default price in total
+      setCart(updatedCart);
+      setTotal(cartTotal + price);
+
+      setError(null);
+    } catch (err) {
+      setError("Failed to add item to cart. Please try again.");
+      console.error("Add to cart error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const removeFromCart = (id) => {
@@ -329,13 +376,50 @@ function CartContiner() {
     }
   };
 
-  const handleReadyToPay = () => {
-    // Save the total amount to localStorage
-    localStorage.setItem("totalAmount", total);
-    localStorage.setItem("getTopic", topic);
-    localStorage.setItem("getCount", getTotalCount());
-    // Redirect the user to the login page
-    window.location.href = "/login";
+  const handleReadyToPay = async () => {
+    if (!isTermsAccepted) return;
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const cartData = {
+        final_total: total.toString(),
+        currency_symbol: "$",
+        currency: "USD",
+        coupon_id: null,
+        packages: [
+          {
+            package_id: packageId,
+            addon_id: packageId,
+            quantity: 1,
+            amount: pkgPrice.toString(),
+          },
+          ...cart.map((item) => ({
+            package_id: packageId,
+            addon_id: item.id,
+            quantity: item.quantity,
+            amount: item.price.toString(),
+          })),
+        ],
+      };
+
+      console.log("Cart data:", cartData);
+
+      const response = await addToCart(cartData);
+
+      localStorage.setItem("totalAmount", total);
+      localStorage.setItem("getTopic", topic);
+      localStorage.setItem("getCount", getTotalCount());
+      localStorage.setItem("orderId", response.data.order.id);
+
+      window.location.href = "/login";
+    } catch (err) {
+      setError(err.message || "Failed to process cart. Please try again.");
+      console.error("Cart submission error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate total count of all items in the cart
@@ -343,18 +427,32 @@ function CartContiner() {
     return cart.reduce((acc, item) => acc + item.quantity, 1);
   };
 
-  //   const filteredServices = addons.filter((addon) => {
-  //     if (topic === "Career Starter") {
-  //       return true; // Show all addons
-  //     } else if (topic === "Custom Career Suite") {
-  //       return [2, 3, 4].includes(addon.id);
-  //     } else if (topic === "Professional Edge") {
-  //       return [2, 4].includes(addon.id);
-  //     } else if (topic === "Executive Boost") {
-  //       return [2].includes(addon.id);
-  //     }
-  //     return false;
-  //   });
+  const handleTermsAccept = (e) => {
+    setIsTermsAccepted(e.target.checked);
+  };
+
+  const handlePromoSubmit = async (e) => {
+    e.preventDefault();
+    setIsApplyingPromo(true);
+    setPromoError("");
+
+    try {
+      const response = await validatePromoCode(promoCode);
+
+      if (response.http_status === 200) {
+        const discount = response.data.price;
+        setPromoDiscount(discount);
+        setAppliedPromo(response.data);
+        setTotal((prevTotal) => prevTotal - discount);
+        setShowPromoForm(false);
+        setPromoCode("");
+      }
+    } catch (error) {
+      setPromoError(error.message || "Invalid promo code");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
 
   return (
     <div>
@@ -518,10 +616,13 @@ function CartContiner() {
                               +${addon.price}
                             </p>
                             <button
-                              className="enhance_section_cart_btn"
+                              className={`enhance_section_cart_btn ${
+                                isSubmitting ? "loading" : ""
+                              }`}
                               onClick={() => addToCart(addon)}
+                              disabled={isSubmitting}
                             >
-                              Add to cart
+                              {isSubmitting ? "Adding..." : "Add to cart"}
                             </button>
                           </div>
                         </div>
@@ -797,23 +898,75 @@ function CartContiner() {
                   </div>
 
                   {showPromoForm && (
-                    <form className="promo_card_add_box">
+                    <form
+                      className="promo_card_add_box"
+                      onSubmit={handlePromoSubmit}
+                    >
                       <input
                         type="text"
                         placeholder="Enter promo code"
                         className="promo_card_add_box_input"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
                         required
                       />
-                      <button className="promo_card_add_btn">Apply</button>
+                      <button
+                        type="submit"
+                        className={`promo_card_add_btn ${
+                          isApplyingPromo ? "loading" : ""
+                        }`}
+                        disabled={isApplyingPromo}
+                      >
+                        {isApplyingPromo ? "Applying..." : "Apply"}
+                      </button>
                     </form>
                   )}
+
+                  {promoError && (
+                    <div className="promo_error_message">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="M8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667Z"
+                          stroke="#DC2626"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          d="M8 5.33333V8"
+                          stroke="#DC2626"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M8 10.6667H8.00667"
+                          stroke="#DC2626"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span>{promoError}</span>
+                    </div>
+                  )}
+
                   <div className="amounr_box_card">
                     <div className="amounr_box_card_data">
                       <p className="amounr_box_cardonee">Sub Total</p>
-                      <p className="amounr_box_cardonee">${total}</p>
+                      <p className="amounr_box_cardonee">
+                        ${total + promoDiscount}
+                      </p>
                     </div>
-                    <div className="amounr_box_card_data">
-                      <p className="amounr_box_cardone">Sub Total</p>
+                    {appliedPromo && (
+                      <div className="amounr_box_card_data discount">
+                        <p className="amounr_box_cardone">Discount</p>
+                        <p className="amounr_box_cardone">-${promoDiscount}</p>
+                      </div>
+                    )}
+                    <div className="amounr_box_card_data total">
+                      <p className="amounr_box_cardone">Total</p>
                       <p className="amounr_box_cardone">${total}</p>
                     </div>
                   </div>
@@ -825,7 +978,8 @@ function CartContiner() {
                     <input
                       type="checkbox"
                       className="cart_continer_main_card_subsetion_check"
-                      checked
+                      checked={isTermsAccepted}
+                      onChange={handleTermsAccept}
                     />
                   </div>
                   <p className="cart_continer_main_card_subsetion_pera">
@@ -846,8 +1000,40 @@ function CartContiner() {
                     </span>
                   </p>
                 </div>
-                <button className="redybtn_cart" onClick={handleReadyToPay}>
-                  I’m Ready to Pay
+                {error && (
+                  <div className="cart_error_message">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M10 18.3334C14.6024 18.3334 18.3334 14.6024 18.3334 10C18.3334 5.39765 14.6024 1.66669 10 1.66669C5.39765 1.66669 1.66669 5.39765 1.66669 10C1.66669 14.6024 5.39765 18.3334 10 18.3334Z"
+                        stroke="#DC2626"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M10 6.66669V10"
+                        stroke="#DC2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10 13.3333H10.0083"
+                        stroke="#DC2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                )}
+                <button
+                  className={`redybtn_cart ${
+                    !isTermsAccepted || isSubmitting
+                      ? "redybtn_cart_disabled"
+                      : ""
+                  }`}
+                  onClick={handleReadyToPay}
+                  disabled={!isTermsAccepted || isSubmitting}
+                >
+                  {isSubmitting ? "Processing..." : "I'm Ready to Pay"}
                 </button>
               </div>
             </div>

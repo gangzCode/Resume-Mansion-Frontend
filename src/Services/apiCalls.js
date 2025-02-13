@@ -164,3 +164,25 @@ export const uploadCV = async (file, email) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const addToCart = async (cartData) => {
+  try {
+    const response = await axios.post(`${baseUrl}/add-to-cart`, cartData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const validatePromoCode = async (code) => {
+  try {
+    const response = await axios.get(`${baseUrl}/coupon?coupon=${code}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
