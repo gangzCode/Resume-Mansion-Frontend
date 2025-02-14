@@ -18,7 +18,7 @@ function HeroSection({ title, subNav, heroPera }) {
                             <p className='hero_service_topic_sub'>Make your job application memorable</p>
                             <h1 className='hero_service_topic'>{title}</h1>
                             <p className='hero_service_pera'>{heroPera}</p>
-                            <button className='hero_service_btn'>Order now - Just for $100</button>
+                            <button className='hero_service_btn'>Order now - Just for $60</button>
                         </div>
                     </div>
                 </div>

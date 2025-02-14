@@ -5,6 +5,7 @@ import {
   getPackages,
   addToCartService,
   clearCart,
+  getCartItems,
 } from "../../../../Services/apiCalls";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../../Context/AuthContext";
@@ -15,6 +16,9 @@ function Hero() {
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
   const [cartItems, setCartItems] = useState([]);
+  const [currentPackageId, setCurrentPackageId] = useState(
+    JSON.parse(localStorage.getItem("selectedPackage"))?.id || null
+  );
 
   const navigate = useNavigate();
 
@@ -42,6 +46,14 @@ function Hero() {
     fetchPackages();
   }, []);
 
+  useEffect(() => {
+    const savedPackage = localStorage.getItem("selectedPackage");
+    if (savedPackage) {
+      const { id } = JSON.parse(savedPackage);
+      setCurrentPackageId(id);
+    }
+  }, []);
+
   const handlePackageSelect = async (pkg) => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -49,20 +61,25 @@ function Hero() {
     }
 
     try {
-      await clearCart();
+      const cartResponse = await getCartItems();
+      const hasItems = cartResponse.data > 0;
+
+      if (hasItems) {
+        await clearCart();
+        localStorage.removeItem("selectedPackage");
+      }
+
       localStorage.removeItem("selectedPackage");
 
       const cartData = {
-        final_total: pkg.price.toString(),
-        currency_symbol: "$",
-        currency: "usd",
         package_id: pkg.id,
-        addon_id: null,
-        quantity: 1,
-        amount: pkg.price.toString(),
       };
 
-      await addToCartService(cartData);
+      const response = await addToCartService(cartData);
+
+      if (response.status !== 200) {
+        localStorage.setItem("orderId", response.data.order.id);
+      }
 
       const packageDetails = {
         id: pkg.id,
@@ -70,7 +87,9 @@ function Hero() {
         price: pkg.price,
         shortDescription: pkg.short_description,
       };
+
       localStorage.setItem("selectedPackage", JSON.stringify(packageDetails));
+      setCurrentPackageId(pkg.id);
 
       navigate("/itemCart");
     } catch (error) {

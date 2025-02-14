@@ -3,8 +3,10 @@ import "./CartContiner.css";
 import { useLocation, useNavigate } from "react-router";
 import {
   getPackageAddons,
-  addToCart,
   validatePromoCode,
+  updateCartAddons,
+  deleteCartItem,
+  getCart, // Add this import
 } from "../../../../../Services/apiCalls";
 
 function CartContiner() {
@@ -34,12 +36,21 @@ function CartContiner() {
 
   const [packageDetails, setPackageDetails] = useState(null);
 
+  const [orderId, setOrderId] = useState(
+    localStorage.getItem("orderId") || null
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Add new state for tracking loading button
+  const [loadingAddonId, setLoadingAddonId] = useState(null);
+
   useEffect(() => {
     const storedPackage = localStorage.getItem("selectedPackage");
 
     if (storedPackage) {
       const parsedPackage = JSON.parse(storedPackage);
 
+      setOrderId(Number(localStorage.getItem("orderId")));
       console.log(parsedPackage.id, "parsedPackage");
       setPackageDetails(parsedPackage);
       setpackageId(parsedPackage.id);
@@ -71,6 +82,19 @@ function CartContiner() {
     fetchAddons();
   }, [packageId]);
 
+  // useEffect(() => {
+  //   // Load cart data from localStorage on component mount
+  //   const savedCart = localStorage.getItem("cartItems");
+  //   const savedTotal = localStorage.getItem("cartTotal");
+
+  //   if (savedCart) {
+  //     setCart(JSON.parse(savedCart));
+  //   }
+  //   if (savedTotal) {
+  //     setTotal(parseFloat(savedTotal));
+  //   }
+  // }, []);
+
   const handleClickPromoOpen = () => {
     setShowPromoForm(!showPromoForm);
   };
@@ -95,40 +119,121 @@ function CartContiner() {
     }
   };
 
-  const updateItemQuantity = (id, newQuantity) => {
-    if (newQuantity <= 0) return; // Prevent setting quantity to 0 or negative
-
-    const updatedCart = cart.map((item) =>
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    );
-
-    const cartTotal = updatedCart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    setCart(updatedCart);
-    setTotal(cartTotal + price); // Include default price in total
+  const isExpressDelivery = (item) => {
+    return item.title?.toLowerCase().includes("express");
   };
 
-  const addToCart = async (service) => {
-    const updatedCart = [...cart, { ...service, quantity: 1 }];
-    const cartTotal = updatedCart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
+  const updateItemQuantity = async (id, newQuantity) => {
+    if (newQuantity <= 0 || !orderId || isUpdating) return;
 
-    setCart(updatedCart);
-    setTotal(cartTotal + price);
+    const item = cart.find((item) => item.id === id);
+    if (item && isExpressDelivery(item)) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await updateCartAddons(orderId, id, newQuantity);
+
+      if (response.http_status === 200) {
+        const updatedCart = response.data.lines.map((line) => ({
+          id: line.addon_id,
+          lineId: line.line_id,
+          title: line.addon,
+          price: parseFloat(line.price),
+          quantity: parseInt(line.quantity),
+          description: line.description,
+        }));
+
+        setCart(updatedCart);
+        setTotal(parseFloat(response.data.total));
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+        localStorage.setItem("cartTotal", response.data.total);
+      }
+    } catch (error) {
+      setError("Failed to update quantity");
+      console.error("Update quantity error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const removeFromCart = (id) => {
-    const updatedCart = cart.filter((item) => item.id !== id);
-    const cartTotal = updatedCart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    setCart(updatedCart);
-    setTotal(cartTotal + price); // Include default price in total
+  // Update addToCart function
+  const addToCart = async (addon) => {
+    setLoadingAddonId(addon.id);
+    try {
+      const response = await updateCartAddons(orderId, addon.id, 1);
+
+      console.log(addon, "addon");
+      console.log(response, "response");
+
+      if (response.http_status === 200) {
+        const updatedCart = response.data.lines.map((line) => ({
+          id: line.addon_id,
+          lineId: line.line_id,
+          title: line.addon,
+          price: parseFloat(line.price),
+          quantity: parseInt(line.quantity),
+          description: line.description,
+        }));
+
+        setCart(updatedCart);
+        setTotal(parseFloat(response.data.total));
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+        localStorage.setItem("cartTotal", response.data.total);
+      }
+    } catch (error) {
+      setError("Failed to add item to cart");
+      console.error("Add to cart error:", error);
+    } finally {
+      setLoadingAddonId(null); // Reset loading state
+    }
+  };
+
+  const removeFromCart = async (lineId) => {
+    if (!lineId || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      const deleteResponse = await deleteCartItem(lineId);
+
+      if (deleteResponse.http_status === 200) {
+        const cartResponse = await getCart();
+
+        if (cartResponse.http_status === 200) {
+          setOrderId(cartResponse.data.order_id);
+          localStorage.setItem("orderId", cartResponse.data.order_id);
+
+          if (cartResponse.data.package_id) {
+            setpackageId(cartResponse.data.package_id);
+            setTopic(cartResponse.data.package);
+          }
+          setTotal(parseFloat(cartResponse.data.total));
+
+          const cartItems = cartResponse.data.lines.map((line) => ({
+            id: line.addon_id,
+            lineId: line.line_id,
+            title: line.addon,
+            description: line.description,
+            price: parseFloat(line.price),
+            quantity: parseInt(line.quantity),
+          }));
+
+          setCart(cartItems);
+          localStorage.setItem("cartItems", JSON.stringify(cartItems));
+          localStorage.setItem("cartTotal", cartResponse.data.total);
+
+          if (packageId) {
+            const addonsResponse = await getPackageAddons(packageId);
+            const addonsList = addonsResponse.slice(1);
+            setAddons(addonsList);
+          }
+        }
+      }
+    } catch (error) {
+      setError("Failed to remove item");
+      console.error("Remove from cart error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getSelectedServiceNames = () => {
@@ -345,6 +450,21 @@ function CartContiner() {
       localStorage.setItem("totalAmount", total.toString());
       localStorage.setItem("getTopic", topic);
       localStorage.setItem("getCount", getTotalCount().toString());
+      localStorage.setItem(
+        "packageDetails",
+        JSON.stringify({
+          id: packageId,
+          title: topic,
+          price: price,
+          shortDescription: pkgShortDesc,
+        })
+      );
+
+      // Save applied promo if exists
+      if (appliedPromo) {
+        localStorage.setItem("appliedPromo", JSON.stringify(appliedPromo));
+        localStorage.setItem("promoDiscount", promoDiscount.toString());
+      }
 
       navigate("/payment");
     }
@@ -383,6 +503,71 @@ function CartContiner() {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      // Clean up localStorage when navigating away without payment
+      if (window.location.pathname !== "/payment") {
+        localStorage.removeItem("cartItems");
+        localStorage.removeItem("cartTotal");
+        localStorage.removeItem("totalAmount");
+        localStorage.removeItem("getTopic");
+        localStorage.removeItem("getCount");
+        localStorage.removeItem("packageDetails");
+        localStorage.removeItem("appliedPromo");
+        localStorage.removeItem("promoDiscount");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchCartData = async () => {
+      setLoading(true);
+      try {
+        const response = await getCart();
+
+        if (response.http_status === 200) {
+          // Set order ID
+          setOrderId(response.data.order_id);
+          localStorage.setItem("orderId", response.data.order_id);
+
+          // Set package details
+          if (response.data.package_id) {
+            setpackageId(response.data.package_id);
+            setTopic(response.data.package);
+          }
+
+          // Set total
+          setTotal(parseFloat(response.data.total));
+
+          // Set cart items
+          const cartItems = response.data.lines.map((line) => ({
+            id: line.addon_id,
+            lineId: line.line_id,
+            title: line.addon,
+            description: line.description,
+            price: parseFloat(line.price),
+            quantity: parseInt(line.quantity),
+          }));
+
+          console.log(cartItems, "cartItems");
+
+          setCart(cartItems);
+
+          // Update localStorage
+          localStorage.setItem("cartItems", JSON.stringify(cartItems));
+          localStorage.setItem("cartTotal", response.data.total);
+        }
+      } catch (error) {
+        setError("Failed to load cart data");
+        console.error("Fetch cart error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartData();
+  }, []); // Run once when component mounts
+
   return (
     <div>
       <div className="continer_main_box">
@@ -392,17 +577,17 @@ function CartContiner() {
               <div className="cart_card_continer">
                 <p className="cart_card_topic">Your Cart</p>
 
-                <div class="cart_card Career_Starter">
-                  <div class="cart_card_section_one">
-                    <p class="cart_card_section_one_topic">{topic}</p>
-                    <p class="cart_card_section_one_close_price">
+                <div className="cart_card Career_Starter">
+                  <div className="cart_card_section_one">
+                    <p className="cart_card_section_one_topic">{topic}</p>
+                    <p className="cart_card_section_one_close_price">
                       {price && "$" + price}
                     </p>
                   </div>
-                  <p class="cart_card_pera">{pkgShortDesc}</p>
+                  <p className="cart_card_pera">{pkgShortDesc}</p>
                 </div>
                 {cart.map((item, index) => (
-                  <div className="cart_card">
+                  <div className="cart_card" key={item.id}>
                     <div className="cart_card_section_one">
                       <p className="cart_card_section_one_topic">
                         {item.title}
@@ -410,7 +595,7 @@ function CartContiner() {
                       <p className="cart_card_section_one_close_price">
                         ${item.price}
                         <svg
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.lineId)}
                           className="svg_cuser"
                           xmlns="http://www.w3.org/2000/svg"
                           width="24"
@@ -436,76 +621,78 @@ function CartContiner() {
                       </p>
                     </div>
                     <p className="cart_card_pera">{item.description}</p>
-                    <div className="cart_card_qty_update">
-                      <p
-                        className="svg_cuser"
-                        onClick={() => decreaseQuantity(item.id)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
+                    {!isExpressDelivery(item) && (
+                      <div className="cart_card_qty_update">
+                        <p
+                          className="svg_cuser"
+                          onClick={() => decreaseQuantity(item.id)}
                         >
-                          <g clip-path="url(#clip0_40000049_760)">
-                            <path
-                              d="M3.33398 8H12.6673"
-                              stroke="#051D14"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_40000049_760">
-                              <rect width="16" height="16" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </p>
-                      <input
-                        type="number"
-                        name="qty"
-                        className="update_qty"
-                        value={item.quantity}
-                        readOnly
-                      />
-                      <p
-                        className="svg_cuser"
-                        onClick={() => increaseQuantity(item.id)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                          >
+                            <g clip-path="url(#clip0_40000049_760)">
+                              <path
+                                d="M3.33398 8H12.6673"
+                                stroke="#051D14"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </g>
+                            <defs>
+                              <clipPath id="clip0_40000049_760">
+                                <rect width="16" height="16" fill="white" />
+                              </clipPath>
+                            </defs>
+                          </svg>
+                        </p>
+                        <input
+                          type="number"
+                          name="qty"
+                          className="update_qty"
+                          value={item.quantity}
+                          readOnly
+                        />
+                        <p
+                          className="svg_cuser"
+                          onClick={() => increaseQuantity(item.id)}
                         >
-                          <g clip-path="url(#clip0_40000049_764)">
-                            <path
-                              d="M8 3.3335V12.6668"
-                              stroke="#051D14"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                            <path
-                              d="M3.33398 8H12.6673"
-                              stroke="#051D14"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_40000049_764">
-                              <rect width="16" height="16" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </p>
-                    </div>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                          >
+                            <g clip-path="url(#clip0_40000049_764)">
+                              <path
+                                d="M8 3.3335V12.6668"
+                                stroke="#051D14"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                              <path
+                                d="M3.33398 8H12.6673"
+                                stroke="#051D14"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </g>
+                            <defs>
+                              <clipPath id="clip0_40000049_764">
+                                <rect width="16" height="16" fill="white" />
+                              </clipPath>
+                            </defs>
+                          </svg>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -546,12 +733,14 @@ function CartContiner() {
                             </p>
                             <button
                               className={`enhance_section_cart_btn ${
-                                isSubmitting ? "loading" : ""
+                                loadingAddonId === addon.id ? "loading" : ""
                               }`}
                               onClick={() => addToCart(addon)}
-                              disabled={isSubmitting}
+                              disabled={loadingAddonId === addon.id}
                             >
-                              {isSubmitting ? "Adding..." : "Add to cart"}
+                              {loadingAddonId === addon.id
+                                ? "Adding..."
+                                : "Add to cart"}
                             </button>
                           </div>
                         </div>

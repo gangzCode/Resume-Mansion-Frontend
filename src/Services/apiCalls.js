@@ -232,3 +232,70 @@ export const clearCart = async () => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const updateCartAddons = async (orderId, addonId, quantity) => {
+  try {
+    const response = await fetch(`${baseUrl}/cart/update`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        addon_id: addonId,
+        quantity: quantity,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to update cart");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Update cart error:", error);
+    throw error;
+  }
+};
+
+export const deleteCartItem = async (addonId) => {
+  try {
+    const response = await fetch(`${baseUrl}/cart/delete/${addonId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to remove item");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Delete cart item error:", error);
+    throw error;
+  }
+};
+
+export const getCart = async () => {
+  try {
+    const response = await fetch(`${baseUrl}/get-cart`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

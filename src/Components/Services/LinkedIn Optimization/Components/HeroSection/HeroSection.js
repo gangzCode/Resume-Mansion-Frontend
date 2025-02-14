@@ -18,7 +18,7 @@ function HeroSection() {
             <p className='hero_service_topic_sub'>Let your LinkedIn profile shine bright</p>
             <h1 className='hero_service_topic'>LinkedIn Profile Optimization Service</h1>
             <p className='hero_service_pera'>Boost your online presence with a keyword-optimized LinkedIn profile from Resume Mansion. Our experts showcase your strengths to help you stand out to recruiters and elevate your personal brand.</p>
-            <button className='hero_service_btn'>Order now - Just for $100</button>
+            <button className='hero_service_btn'>Order now - Just for $60</button>
           </div>
         </div>
       </div>
