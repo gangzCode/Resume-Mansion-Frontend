@@ -225,7 +225,7 @@ function CartNav() {
                         </defs>
                       </svg>
                     </div>
-                    <div
+                    {/* <div
                       className="icon_set"
                       onClick={() => (window.location.href = "/emptyCart")}
                     >
@@ -258,11 +258,8 @@ function CartNav() {
                           </clipPath>
                         </defs>
                       </svg>
-                    </div>
-                    <button
-                      className="order_btn_nav nroml_verson"
-                      onClick={() => (window.location.href = "/emptyCart")}
-                    >
+                    </div> */}
+                    <button className="order_btn_nav nroml_verson">
                       Order Now
                     </button>
                     {/* <button className='order_btn_nav nroml_verson'>Order Now</button> */}

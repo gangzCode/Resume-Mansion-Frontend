@@ -59,6 +59,7 @@ function Hero() {
       navigate("/login");
       return;
     }
+    console.log(pkg.id + "pkg");
 
     try {
       const cartResponse = await getCartItems();
