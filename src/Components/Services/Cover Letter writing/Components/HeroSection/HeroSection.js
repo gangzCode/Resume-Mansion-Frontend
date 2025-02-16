@@ -2,7 +2,58 @@ import React from "react";
 import "./HeroSection.css";
 import { RiHome6Line } from "react-icons/ri";
 import { MdNavigateNext } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import {
+  addToCartService,
+  clearCart,
+  getCartItems,
+} from "../../../../../Services/apiCalls";
+import { useAuth } from "../../../../../Context/AuthContext";
+
 function HeroSection() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleOrderNow = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const cartResponse = await getCartItems();
+      const hasItems = cartResponse.data > 0;
+
+      if (hasItems) {
+        await clearCart();
+        localStorage.removeItem("selectedPackage");
+      }
+
+      const cartData = {
+        package_id: 4,
+      };
+
+      const response = await addToCartService(cartData);
+
+      if (response.status !== 200) {
+        localStorage.setItem("orderId", response.data.order.id);
+      }
+
+      const packageDetails = {
+        id: 4,
+        title: "Build Your Own Package",
+        price: 0,
+        shortDescription:
+          "Build your own job search suite with multiple resumes, cover letters, and LinkedIn profiles.",
+      };
+
+      localStorage.setItem("selectedPackage", JSON.stringify(packageDetails));
+      navigate("/itemCart");
+    } catch (error) {
+      console.error("Add to cart error:", error);
+    }
+  };
+
   return (
     <div className="Resume_Hreeo_home_back">
       <div className="continer_main_box">
@@ -39,7 +90,7 @@ function HeroSection() {
               with a personalized touch. Make a memorable first impression with
               your own cover letter.
             </p>
-            <button className="hero_service_btn">
+            <button className="hero_service_btn" onClick={handleOrderNow}>
               Order now - Just for $60
             </button>
           </div>
