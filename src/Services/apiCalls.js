@@ -235,67 +235,74 @@ export const clearCart = async () => {
 
 export const updateCartAddons = async (orderId, addonId, quantity) => {
   try {
-    const response = await fetch(`${baseUrl}/cart/update`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
+    const token = localStorage.getItem("token");
+    const response = await axios.put(
+      `${baseUrl}/cart/update`,
+      {
         order_id: orderId,
         addon_id: addonId,
         quantity: quantity,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to update cart");
-    }
-
-    return data;
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
   } catch (error) {
     console.error("Update cart error:", error);
-    throw error;
+    throw error.response ? error.response.data : error;
   }
 };
 
 export const deleteCartItem = async (addonId) => {
   try {
-    const response = await fetch(`${baseUrl}/cart/delete/${addonId}`, {
-      method: "DELETE",
+    const token = localStorage.getItem("token");
+    const response = await axios.delete(`${baseUrl}/cart/delete/${addonId}`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to remove item");
-    }
-
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Delete cart item error:", error);
-    throw error;
+    throw error.response ? error.response.data : error;
   }
 };
 
 export const getCart = async () => {
   try {
-    const response = await fetch(`${baseUrl}/get-cart`, {
-      method: "GET",
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${baseUrl}/get-cart`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    throw error;
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const placeOrder = async (orderData) => {
+  try {
+    const response = await axios.post(
+      `${baseUrl}/cart/place-order`,
+      orderData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
   }
 };

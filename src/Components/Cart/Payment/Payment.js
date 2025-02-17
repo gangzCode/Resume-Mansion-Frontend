@@ -8,10 +8,10 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useNavigate } from "react-router-dom";
+import { placeOrder } from "../../../Services/apiCalls";
+import { useSnackbar } from "../../../Context/SnackbarContext";
 
-const stripePromise = loadStripe(
-  "pk_test_51Qt02JBCCDTvPwlcSD8dUjs8EdRhNuVccQjTtQ38OryhmBG7C50Kvdca9F9ehiXqBrYcphwMk6RlRqerwovmjdfO00u0qQMgSy"
-);
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 const CheckoutForm = ({ total }) => {
   const stripe = useStripe();
@@ -20,6 +20,12 @@ const CheckoutForm = ({ total }) => {
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
+
+  const [orderId, setOrderId] = useState(
+    localStorage.getItem("orderId") || null
+  );
 
   const [billingDetails, setBillingDetails] = useState({
     email: "",
@@ -37,44 +43,66 @@ const CheckoutForm = ({ total }) => {
     event.preventDefault();
     setLoading(true);
 
-    if (!stripe || !elements) return;
+    try {
+      if (!stripe || !elements) {
+        return;
+      }
 
-    const cardElement = elements.getElement(CardElement);
+      const cardElement = elements.getElement(CardElement);
 
-    // Create a Payment Method
-    const { paymentMethod, error } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement,
-    });
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement,
+      });
 
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-      return;
-    }
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
 
-    // Send Payment Method ID to Laravel
-    const response = await fetch("http://127.0.0.1:8000/api/cart/place-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      const orderData = {
         payment_method_id: paymentMethod.id,
-        orderid: 7531,
-      }),
-    });
+        order_id: orderId,
+      };
 
-    const data = await response.json();
+      const response = await placeOrder(orderData);
 
-    console.log(data, "data");
+      if (response.http_status === 200) {
+        localStorage.removeItem("cartItems");
+        localStorage.removeItem("cartTotal");
+        localStorage.removeItem("orderId");
 
-    if (data.success) {
-      setMessage("Payment successful!");
-    } else {
-      setMessage(`Payment failed: ${data.error}`);
+        localStorage.setItem("paymentComplete", "true");
+
+        showSnackbar(
+          "Payment successful! Your order has been placed.",
+          "success"
+        );
+
+        navigate("/currentOrder", { replace: true });
+      } else {
+        setMessage(`Payment failed: ${response.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      setMessage(`Payment failed: ${error.message || "Unknown error"}`);
+      console.error("Payment error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const paymentComplete = localStorage.getItem("paymentComplete");
+    if (paymentComplete === "true") {
+      navigate("/currentOrder", { replace: true });
     }
 
-    setLoading(false);
-  };
+    return () => {
+      if (window.location.pathname === "/currentOrder") {
+        localStorage.removeItem("paymentComplete");
+      }
+    };
+  }, [navigate]);
 
   return (
     <form onSubmit={handleSubmit} className="checkout-form">
@@ -245,13 +273,11 @@ function Payment() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get values from localStorage
     const savedTotal = localStorage.getItem("totalAmount");
     const savedTopic = localStorage.getItem("getTopic");
     const savedCount = localStorage.getItem("getCount");
 
     if (!savedTotal) {
-      // Redirect back to cart if no total found
       navigate("/itemCart");
       return;
     }

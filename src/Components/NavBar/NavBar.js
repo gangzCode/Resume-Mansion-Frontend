@@ -4,6 +4,7 @@ import { FaArrowRight } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import { getCartItems } from "../../Services/apiCalls";
+import { useSnackbar } from "../../Context/SnackbarContext";
 
 function NavBar() {
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -17,6 +18,7 @@ function NavBar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
 
   const handleMouseEnter = () => {
     setServicesOpen(true);
@@ -38,6 +40,7 @@ function NavBar() {
   const handleLogoutConfirm = () => {
     logout();
     setShowLogoutConfirm(false);
+    showSnackbar("Successfully logged out", "success");
     window.location.href = "/";
   };
 
@@ -51,7 +54,6 @@ function NavBar() {
     }
   };
 
-  // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -497,7 +499,7 @@ function NavBar() {
             {servicesOpen && (
               <div
                 className="services_dropdown"
-                onMouseEnter={handleMouseEnter} // Keep visible when hovering over the second item
+                onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
                 <div className="services_dropdown_subb">

@@ -27,6 +27,7 @@ import NavBar from "./Components/NavBar/NavBar";
 import { AuthProvider } from "./Context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import UnauthenticatedRoute from "./Components/UnauthenticatedRoute";
+import { SnackbarProvider } from "./Context/SnackbarContext";
 
 function App() {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
@@ -45,65 +46,60 @@ function App() {
 
   return (
     <AuthProvider>
-      {isFirstVisit && <Cookies onClose={handleCloseCookies} />}
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/login"
-          element={
-            <UnauthenticatedRoute>
-              <Login />
-            </UnauthenticatedRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <UnauthenticatedRoute>
-              <Register />
-            </UnauthenticatedRoute>
-          }
-        />
+      <SnackbarProvider>
+        {isFirstVisit && <Cookies onClose={handleCloseCookies} />}
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/login"
+            element={
+              <UnauthenticatedRoute>
+                <Login />
+              </UnauthenticatedRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <UnauthenticatedRoute>
+                <Register />
+              </UnauthenticatedRoute>
+            }
+          />
 
-        <Route path="/payment" element={<Payment />} />
-        <Route
-          path="/currentOrder"
-          element={
-            <ProtectedRoute>
-              <OrderPlaced />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/previousOrders"
-          element={
-            <ProtectedRoute>
-              <PastOrdersMain />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/servicess" element={<Services />} />
-        <Route path="/resumeWriting" element={<ResumeWriting />} />
-        <Route path="/coverLetter" element={<CoverLetterwriting />} />
-        <Route
-          path="/linkedInOptimization"
-          element={<LinkedInOptimization />}
-        />
-        <Route path="/careerAdvice" element={<CareerAdvice />} />
-        <Route path="/blogPostPage" element={<BlogPostPage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/writers" element={<Writers />} />
-        <Route path="/contactUs" element={<ContactUs />} />
-        <Route path="/fAQ" element={<FAQ />} />
-        <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
-        <Route path="/cookiePolicy" element={<CookiePolicy />} />
-        <Route path="/industry/:topic" element={<IndustryBase />} />
-        {/* Cart Routes */}
-        <Route path="/emptyCart" element={<EmptyCart />} />
-        <Route path="/itemCart" element={<ItemCart />} />
-        <Route path="/pastOrders" element={<PastOrdersSub />} />
-      </Routes>
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/currentOrder" element={<OrderPlaced />} />
+          <Route
+            path="/previousOrders"
+            element={
+              <ProtectedRoute>
+                <PastOrdersMain />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/servicess" element={<Services />} />
+          <Route path="/resumeWriting" element={<ResumeWriting />} />
+          <Route path="/coverLetter" element={<CoverLetterwriting />} />
+          <Route
+            path="/linkedInOptimization"
+            element={<LinkedInOptimization />}
+          />
+          <Route path="/careerAdvice" element={<CareerAdvice />} />
+          <Route path="/blogPostPage" element={<BlogPostPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/writers" element={<Writers />} />
+          <Route path="/contactUs" element={<ContactUs />} />
+          <Route path="/fAQ" element={<FAQ />} />
+          <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="/cookiePolicy" element={<CookiePolicy />} />
+          <Route path="/industry/:topic" element={<IndustryBase />} />
+          {/* Cart Routes */}
+          <Route path="/emptyCart" element={<EmptyCart />} />
+          <Route path="/itemCart" element={<ItemCart />} />
+          <Route path="/pastOrders" element={<PastOrdersSub />} />
+        </Routes>
+      </SnackbarProvider>
     </AuthProvider>
   );
 }

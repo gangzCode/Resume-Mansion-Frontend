@@ -4,6 +4,7 @@ import { loginUser } from "../../../Services/apiCalls";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthContext";
 import { Typography } from "@mui/material";
+import { useSnackbar } from "../../../Context/SnackbarContext";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ function Login() {
   const [success, setSuccess] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -24,13 +26,14 @@ function Login() {
 
       // Store token and user info
       login(token, info);
-      setSuccess("Login successful!");
 
-      // Redirect to home page or previous page
+      showSnackbar("Successfully logged in!", "success");
+
       const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
       sessionStorage.removeItem("redirectAfterLogin");
       navigate(redirectPath);
     } catch (err) {
+      showSnackbar(err.message || "Login failed. Please try again.", "error");
       setError(err.message || "Login failed. Please try again.");
     }
   };

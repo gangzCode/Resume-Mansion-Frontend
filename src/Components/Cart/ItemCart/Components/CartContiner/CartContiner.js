@@ -41,7 +41,6 @@ function CartContiner() {
   );
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Add new state for tracking loading button
   const [loadingAddonId, setLoadingAddonId] = useState(null);
 
   useEffect(() => {
@@ -100,22 +99,20 @@ function CartContiner() {
   };
 
   const handleClosePromoOpen = () => {
-    setShowPromoForm(false); // Hide the form
+    setShowPromoForm(false);
   };
 
-  // Function to increase quantity of a specific item
   const increaseQuantity = (id) => {
     const item = cart.find((item) => item.id === id);
     if (item) {
-      updateItemQuantity(id, item.quantity + 1); // Increase quantity by 1
+      updateItemQuantity(id, item.quantity + 1);
     }
   };
 
-  // Function to decrease quantity of a specific item
   const decreaseQuantity = (id) => {
     const item = cart.find((item) => item.id === id);
     if (item && item.quantity > 1) {
-      updateItemQuantity(id, item.quantity - 1); // Decrease quantity by 1
+      updateItemQuantity(id, item.quantity - 1);
     }
   };
 
@@ -156,7 +153,6 @@ function CartContiner() {
     }
   };
 
-  // Update addToCart function
   const addToCart = async (addon) => {
     setLoadingAddonId(addon.id);
     try {
@@ -184,7 +180,7 @@ function CartContiner() {
       setError("Failed to add item to cart");
       console.error("Add to cart error:", error);
     } finally {
-      setLoadingAddonId(null); // Reset loading state
+      setLoadingAddonId(null);
     }
   };
 
@@ -806,9 +802,7 @@ function CartContiner() {
                               onClick={() => addToCart(addon)}
                               disabled={loadingAddonId === addon.id}
                             >
-                              {loadingAddonId === addon.id
-                                ? "Adding..."
-                                : "Add to cart"}
+                              Add to cart
                             </button>
                           </div>
                         </div>

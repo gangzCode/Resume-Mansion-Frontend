@@ -25,11 +25,12 @@ export const SnackbarProvider = ({ children }) => {
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={closeSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
         sx={{
           position: "fixed",
           zIndex: 9999,
-          top: "24px",
+          marginTop: "20px",
+          marginRight: "8px",
         }}
       >
         <Alert

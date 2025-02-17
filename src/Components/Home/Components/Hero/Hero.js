@@ -164,7 +164,9 @@ function Hero() {
 
                     <div className="price_drop">
                       <p className="price_card_price">${pkg.price}</p>
-                      {pkg.discount && <p className="dropp_price">$300</p>}
+                      {pkg.discount && (
+                        <p className="dropp_price">${pkg.old_price || 0}</p>
+                      )}
                     </div>
                   </div>
                   <button
