@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe(
-  "pk_test_51Qs8F6GOnA0yDA3w8Ljn86f8Tq4zYizAL2Y0beZ2f6a8bOKsjfAdTpzSgu7Y7azVA23JmmxRjwaV0QMNtvz1NFyA00IKHaUB5V"
+  "pk_test_51Qt02JBCCDTvPwlcSD8dUjs8EdRhNuVccQjTtQ38OryhmBG7C50Kvdca9F9ehiXqBrYcphwMk6RlRqerwovmjdfO00u0qQMgSy"
 );
 
 const CheckoutForm = ({ total }) => {
@@ -18,6 +18,9 @@ const CheckoutForm = ({ total }) => {
   const elements = useElements();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
   const [billingDetails, setBillingDetails] = useState({
     email: "",
     name: "",
@@ -32,57 +35,50 @@ const CheckoutForm = ({ total }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setProcessing(true);
+    setLoading(true);
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements) return;
+
+    const cardElement = elements.getElement(CardElement);
+
+    // Create a Payment Method
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: "card",
+      card: cardElement,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
       return;
     }
 
-    try {
-      const { error: stripeError, paymentMethod } =
-        await stripe.createPaymentMethod({
-          type: "card",
-          card: elements.getElement(CardElement),
-          billing_details: billingDetails,
-        });
+    // Send Payment Method ID to Laravel
+    const response = await fetch("http://127.0.0.1:8000/api/cart/place-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        payment_method_id: paymentMethod.id,
+        orderid: 7531,
+      }),
+    });
 
-      if (stripeError) {
-        setError(stripeError.message);
-        setProcessing(false);
-        return;
-      }
+    const data = await response.json();
 
-      // Call your backend API
-      const response = await fetch("/api/process-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          payment_method_id: paymentMethod.id,
-          amount: total * 100,
-          billing_details: billingDetails,
-        }),
-      });
+    console.log(data, "data");
 
-      if (!response.ok) {
-        throw new Error("Payment failed");
-      }
-
-      localStorage.removeItem("selectedPackage");
-      window.location.href = "/currentOrder";
-    } catch (err) {
-      setError("Payment failed. Please try again.");
-      console.error("Payment error:", err);
+    if (data.success) {
+      setMessage("Payment successful!");
+    } else {
+      setMessage(`Payment failed: ${data.error}`);
     }
 
-    setProcessing(false);
+    setLoading(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className="checkout-form">
-      <div className="form-section">
+      {/* <div className="form-section">
         <h3 className="section-title">Billing Information</h3>
 
         <div className="form-row">
@@ -184,7 +180,7 @@ const CheckoutForm = ({ total }) => {
             />
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="form-section">
         <h3 className="section-title">Payment Details</h3>
