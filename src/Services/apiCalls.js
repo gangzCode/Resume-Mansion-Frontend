@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const baseUrl = "https://jtlanka.com/custom/API/public/api";
+export const baseUrl = "http://127.0.0.1:8000/api";
 
 export const getIPAddress = async () => {
   try {

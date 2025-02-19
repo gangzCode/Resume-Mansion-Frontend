@@ -61,7 +61,12 @@ function NavBar() {
   const handleCartClick = async () => {
     try {
       const cartResponse = await getCartItems();
-      navigate(cartResponse.data !== undefined ? "/itemCart" : "/emptyCart");
+      console.log(cartResponse.transaction_id, cartResponse);
+      if (cartResponse.transaction_id !== 0) {
+        navigate("/itemCart");
+      } else {
+        navigate("/emptyCart");
+      }
     } catch (error) {
       console.error("Failed to check cart:", error);
       navigate("/emptyCart");

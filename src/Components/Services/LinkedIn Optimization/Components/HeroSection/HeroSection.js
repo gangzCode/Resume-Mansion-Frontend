@@ -7,12 +7,15 @@ import {
   addToCartService,
   clearCart,
   getCartItems,
+  getCurrentOrder,
 } from "../../../../../Services/apiCalls";
 import { useAuth } from "../../../../../Context/AuthContext";
+import { useSnackbar } from "../../../../../Context/SnackbarContext";
 
 function HeroSection() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { showSnackbar } = useSnackbar();
 
   const handleOrderNow = async () => {
     if (!isAuthenticated) {
@@ -21,13 +24,18 @@ function HeroSection() {
     }
 
     try {
-      const cartResponse = await getCartItems();
-      const hasItems = cartResponse.data > 0;
+      const orderResponse = await getCurrentOrder();
 
-      if (hasItems) {
-        await clearCart();
-        localStorage.removeItem("selectedPackage");
+      if (
+        orderResponse.http_status === 200 &&
+        orderResponse.data.length !== 0
+      ) {
+        console.log(orderResponse, "orderResponse");
+        showSnackbar("You have an active order in progress", "warning");
+        return;
       }
+
+      localStorage.removeItem("selectedPackage");
 
       const cartData = {
         package_id: 4,
