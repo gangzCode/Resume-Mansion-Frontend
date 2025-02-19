@@ -70,14 +70,7 @@ function App() {
 
           <Route path="/payment" element={<Payment />} />
           <Route path="/currentOrder" element={<OrderPlaced />} />
-          <Route
-            path="/previousOrders"
-            element={
-              <ProtectedRoute>
-                <PastOrdersMain />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/previousOrders" element={<PastOrdersMain />} />
           <Route path="/servicess" element={<Services />} />
           <Route path="/resumeWriting" element={<ResumeWriting />} />
           <Route path="/coverLetter" element={<CoverLetterwriting />} />

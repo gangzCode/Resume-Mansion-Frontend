@@ -1,6 +1,10 @@
 import "./Login.css";
 import React, { useState } from "react";
-import { loginUser } from "../../../Services/apiCalls";
+import {
+  getCurrentOrder,
+  getPreviousOrders,
+  loginUser,
+} from "../../../Services/apiCalls";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthContext";
 import { Typography } from "@mui/material";
@@ -24,14 +28,73 @@ function Login() {
       const response = await loginUser(email, password);
       const { token, info } = response.data;
 
-      // Store token and user info
       login(token, info);
 
       showSnackbar("Successfully logged in!", "success");
 
-      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
-      sessionStorage.removeItem("redirectAfterLogin");
-      navigate(redirectPath);
+      const checkToken = () => {
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          console.log("Token found: ", storedToken);
+
+          checkOrders();
+        } else {
+          console.log("asd");
+
+          setTimeout(checkToken, 100);
+        }
+      };
+
+      const checkOrders = async () => {
+        try {
+          const currentOrderResponse = await getCurrentOrder();
+
+          console.log(currentOrderResponse.data, "currentOrderResponse");
+
+          if (
+            currentOrderResponse.http_status === 200 &&
+            currentOrderResponse.data.length !== 0
+          ) {
+            console.log("currentOrderResponse.data.length > 0");
+            const orderDetails = {
+              order_id: currentOrderResponse.data.order_id,
+              total: currentOrderResponse.data.total,
+              currency_code: currentOrderResponse.data.currency_code,
+              package: currentOrderResponse.data.package,
+              package_id: currentOrderResponse.data.package_id,
+              lines: currentOrderResponse.data.lines,
+            };
+
+            localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
+
+            navigate("/currentOrder");
+            return;
+          }
+
+          const previousOrdersResponse = await getPreviousOrders();
+
+          if (
+            previousOrdersResponse.http_status === 200 &&
+            previousOrdersResponse.data.length !== 0
+          ) {
+            navigate("/pastOrders");
+            return;
+          }
+
+          const redirectPath =
+            sessionStorage.getItem("redirectAfterLogin") || "/";
+          sessionStorage.removeItem("redirectAfterLogin");
+          navigate(redirectPath);
+        } catch (orderError) {
+          console.error("Error checking orders:", orderError);
+          const redirectPath =
+            sessionStorage.getItem("redirectAfterLogin") || "/";
+          sessionStorage.removeItem("redirectAfterLogin");
+          navigate(redirectPath);
+        }
+      };
+
+      checkToken();
     } catch (err) {
       showSnackbar(err.message || "Login failed. Please try again.", "error");
       setError(err.message || "Login failed. Please try again.");

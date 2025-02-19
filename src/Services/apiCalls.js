@@ -166,9 +166,9 @@ export const uploadCV = async (file, email) => {
 };
 
 export const addToCartService = async (cartData) => {
-  try {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
+  try {
     if (!token) {
       throw new Error("Authentication token not found");
     }
@@ -200,8 +200,9 @@ export const validatePromoCode = async (code) => {
 };
 
 export const getCartItems = async () => {
+  const token = localStorage.getItem("token");
+
   try {
-    const token = localStorage.getItem("token");
     const response = await axios.get(`${baseUrl}/get-cart`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -214,9 +215,9 @@ export const getCartItems = async () => {
 };
 
 export const clearCart = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
+  try {
     if (!token) {
       throw new Error("Authentication token not found");
     }
@@ -234,8 +235,9 @@ export const clearCart = async () => {
 };
 
 export const updateCartAddons = async (orderId, addonId, quantity) => {
+  const token = localStorage.getItem("token");
+
   try {
-    const token = localStorage.getItem("token");
     const response = await axios.put(
       `${baseUrl}/cart/update`,
       {
@@ -258,8 +260,9 @@ export const updateCartAddons = async (orderId, addonId, quantity) => {
 };
 
 export const deleteCartItem = async (addonId) => {
+  const token = localStorage.getItem("token");
+
   try {
-    const token = localStorage.getItem("token");
     const response = await axios.delete(`${baseUrl}/cart/delete/${addonId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -274,8 +277,9 @@ export const deleteCartItem = async (addonId) => {
 };
 
 export const getCart = async () => {
+  const token = localStorage.getItem("token");
+
   try {
-    const token = localStorage.getItem("token");
     const response = await axios.get(`${baseUrl}/get-cart`, {
       headers: {
         "Content-Type": "application/json",
@@ -300,7 +304,43 @@ export const placeOrder = async (orderData) => {
         },
       }
     );
-    
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const getCurrentOrder = async () => {
+  const token = localStorage.getItem("token");
+
+  console.log(token, "Token in current");
+  try {
+    const response = await axios.get(`${baseUrl}/current-order`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("CURRENT ORDER>>> " + JSON.stringify(response.data));
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const getPreviousOrders = async () => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.get(`${baseUrl}/previous-orders`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;

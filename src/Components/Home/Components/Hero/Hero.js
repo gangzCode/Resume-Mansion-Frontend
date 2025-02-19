@@ -6,9 +6,11 @@ import {
   addToCartService,
   clearCart,
   getCartItems,
+  getCurrentOrder,
 } from "../../../../Services/apiCalls";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../../Context/AuthContext";
+import { useSnackbar } from "../../../../Context/SnackbarContext";
 
 function Hero() {
   const [packages, setPackages] = useState([]);
@@ -19,6 +21,7 @@ function Hero() {
   const [currentPackageId, setCurrentPackageId] = useState(
     JSON.parse(localStorage.getItem("selectedPackage"))?.id || null
   );
+  const { showSnackbar } = useSnackbar();
 
   const navigate = useNavigate();
 
@@ -34,7 +37,6 @@ function Hero() {
     const fetchPackages = async () => {
       try {
         const response = await getPackages();
-        // Access the data array from the response
         setPackages(response.data || []);
         setLoading(false);
       } catch (err) {
@@ -59,15 +61,17 @@ function Hero() {
       navigate("/login");
       return;
     }
-    console.log(pkg.id + "pkg");
 
     try {
-      const cartResponse = await getCartItems();
-      const hasItems = cartResponse.data > 0;
+      const orderResponse = await getCurrentOrder();
 
-      if (hasItems) {
-        await clearCart();
-        localStorage.removeItem("selectedPackage");
+      if (
+        orderResponse.http_status === 200 &&
+        orderResponse.data.length !== 0
+      ) {
+        console.log(orderResponse, "orderResponse");
+        showSnackbar("You have an active order in progress", "warning");
+        return;
       }
 
       localStorage.removeItem("selectedPackage");
@@ -78,9 +82,7 @@ function Hero() {
 
       const response = await addToCartService(cartData);
 
-      if (response.status !== 200) {
-        localStorage.setItem("orderId", response.data.order.id);
-      }
+      console.log(response, "response");
 
       const packageDetails = {
         id: pkg.id,
@@ -94,8 +96,9 @@ function Hero() {
 
       navigate("/itemCart");
     } catch (error) {
-      setError("Failed to add package to cart");
-      console.error("Add to cart error:", error);
+      setError("Failed to process your request");
+      console.error("Selection error:", error);
+      showSnackbar("Failed to process your request", "error");
     }
   };
 

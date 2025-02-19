@@ -68,9 +68,20 @@ const CheckoutForm = ({ total }) => {
       const response = await placeOrder(orderData);
 
       if (response.http_status === 200) {
+        const orderDetails = {
+          order_id: orderId,
+          total: total,
+          currency_code: "$",
+          package: localStorage.getItem("getTopic"),
+          lines: JSON.parse(localStorage.getItem("cartItems") || "[]"),
+        };
+        localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
+
         localStorage.removeItem("cartItems");
         localStorage.removeItem("cartTotal");
         localStorage.removeItem("orderId");
+        localStorage.removeItem("getTopic");
+        localStorage.removeItem("getCount");
 
         localStorage.setItem("paymentComplete", "true");
 

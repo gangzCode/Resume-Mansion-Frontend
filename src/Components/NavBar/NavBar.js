@@ -19,6 +19,8 @@ function NavBar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
+  const orderDetailsLocal = localStorage.getItem("orderDetails");
+  const prevOrderDetailsLocal = localStorage.getItem("prevOrderDetails");
 
   const handleMouseEnter = () => {
     setServicesOpen(true);
@@ -44,6 +46,18 @@ function NavBar() {
     window.location.href = "/";
   };
 
+  const handleUserClick = () => {
+    if (!isAuthenticated) {
+      window.location.href = "/login";
+    } else {
+      if (orderDetailsLocal) {
+        navigate("/currentOrder");
+      } else if (prevOrderDetailsLocal) {
+        navigate("/previousOrders");
+      }
+    }
+  };
+
   const handleCartClick = async () => {
     try {
       const cartResponse = await getCartItems();
@@ -58,7 +72,8 @@ function NavBar() {
     const handleScroll = () => {
       if (
         (window.scrollY > lastScrollY && window.scrollY > 100) ||
-        location.pathname === "/itemCart"
+        location.pathname === "/itemCart" ||
+        location.pathname === "/currentOrder"
       ) {
         setIsVisible(false);
       } else {
@@ -76,7 +91,9 @@ function NavBar() {
       location.pathname === "/login" ||
       location.pathname === "/register" ||
       location.pathname === "/itemCart" ||
-      location.pathname === "/emptyCart"
+      location.pathname === "/emptyCart" ||
+      location.pathname === "/currentOrder" ||
+      location.pathname === "/previousOrders"
     ) {
       setIsVisible(false);
     } else {
@@ -343,11 +360,7 @@ function NavBar() {
                     className="icon_set"
                     onMouseEnter={() => setShowUserMenu(true)}
                     onMouseLeave={() => setShowUserMenu(false)}
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        window.location.href = "/login";
-                      }
-                    }}
+                    onClick={() => handleUserClick()}
                   >
                     <div className="user-icon-container">
                       <svg

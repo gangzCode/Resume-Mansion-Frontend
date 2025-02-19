@@ -378,6 +378,14 @@ input[type="number"] {
   align-items: flex-start;
   gap: 8px;
 }
+.topsetion_card_section_two_continer_itemset_main-order {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+}
 .topsetion_card_section_two_continer_itemset {
   display: flex;
   align-items: center;
