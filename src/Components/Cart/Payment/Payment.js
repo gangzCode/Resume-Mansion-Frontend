@@ -11,7 +11,9 @@ import { useNavigate } from "react-router-dom";
 import { placeOrder } from "../../../Services/apiCalls";
 import { useSnackbar } from "../../../Context/SnackbarContext";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+//const stripePromise = loadStripe(String(process.env.REACT_APP_STRIPE_PUBLIC_KEY));
+
+const stripePromise = loadStripe('pk_test_51Qt02JBCCDTvPwlcSD8dUjs8EdRhNuVccQjTtQ38OryhmBG7C50Kvdca9F9ehiXqBrYcphwMk6RlRqerwovmjdfO00u0qQMgSy');
 
 const CheckoutForm = ({ total }) => {
   const stripe = useStripe();
