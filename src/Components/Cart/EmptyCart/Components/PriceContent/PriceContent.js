@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from "react";
 import "./PriceContent.css";
-import { getPackages } from "../../../../../Services/apiCalls";
-import { useNavigate } from "react-router-dom";
+import {
+  getPackages,
+  addToCartService,
+  clearCart,
+  getCartItems,
+  getCurrentOrder,
+} from "../../../../../Services/apiCalls";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../../../../Context/AuthContext";
+import { useSnackbar } from "../../../../../Context/SnackbarContext";
+import Loader from "../../../../Common/Loader";
 
 function PriceContent() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
+  const [currentPackageId, setCurrentPackageId] = useState(
+    JSON.parse(localStorage.getItem("selectedPackage"))?.id || null
+  );
+  const { showSnackbar } = useSnackbar();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,23 +39,60 @@ function PriceContent() {
     fetchPackages();
   }, []);
 
-  const handlePackageClick = (pkg) => {
+  useEffect(() => {
+    const savedPackage = localStorage.getItem("selectedPackage");
+    if (savedPackage) {
+      const { id } = JSON.parse(savedPackage);
+      setCurrentPackageId(id);
+    }
+  }, []);
+
+  const handlePackageSelect = async (pkg) => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
 
-    navigate("/itemCart", {
-      state: {
-        packageId: pkg.id,
+    try {
+      const orderResponse = await getCurrentOrder();
+
+      if (
+        orderResponse.http_status === 200 &&
+        orderResponse.data.length !== 0
+      ) {
+        console.log(orderResponse, "orderResponse");
+        showSnackbar("You have an active order in progress", "warning");
+        return;
+      }
+
+      localStorage.removeItem("selectedPackage");
+
+      const cartData = {
+        package_id: pkg.id,
+      };
+
+      const response = await addToCartService(cartData);
+
+      console.log(response, "response");
+
+      const packageDetails = {
+        id: pkg.id,
         title: pkg.title,
         price: pkg.price,
         shortDescription: pkg.short_description,
-      },
-    });
+      };
+
+      localStorage.setItem("selectedPackage", JSON.stringify(packageDetails));
+      setCurrentPackageId(pkg.id);
+
+      navigate("/itemCart");
+    } catch (error) {
+      setError("Failed to process your request");
+      console.error("Selection error:", error);
+      showSnackbar("Failed to process your request", "error");
+    }
   };
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
@@ -51,6 +101,8 @@ function PriceContent() {
         <div className="continer_main_box">
           <div className="container">
             <div className="home_continer_main_one">
+              {loading && <Loader />}
+
               <div className="price_card_container">
                 {packages.slice(0, 3).map((pkg) => (
                   <div className="price_card_update" key={pkg.id}>
@@ -98,7 +150,7 @@ function PriceContent() {
                     </div>
                     <button
                       className="price_card_btn"
-                      onClick={() => handlePackageClick(pkg)}
+                      onClick={() => handlePackageSelect(pkg)}
                     >
                       Choose
                     </button>
@@ -144,7 +196,7 @@ function PriceContent() {
                     </div>
                     <button
                       className="sub_card_btn_price"
-                      onClick={() => handlePackageClick(packages[3])}
+                      onClick={() => handlePackageSelect(packages[3])}
                     >
                       Choose
                     </button>

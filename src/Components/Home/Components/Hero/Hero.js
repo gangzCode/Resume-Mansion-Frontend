@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../../Context/AuthContext";
 import { useSnackbar } from "../../../../Context/SnackbarContext";
+import Loader from "../../../Common/Loader";
 
 function Hero() {
   const [packages, setPackages] = useState([]);
@@ -24,14 +25,6 @@ function Hero() {
   const { showSnackbar } = useSnackbar();
 
   const navigate = useNavigate();
-
-  let dummy = [
-    "Keyword optimized resume",
-    "ATS-friendly, modern resume format",
-    "Direct communication with your writer",
-    "Unlimited revisions",
-    "48-hour turnaround time (24-hour Express Delivery optional)",
-  ];
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -119,6 +112,7 @@ function Hero() {
                 Professional Resume Writing Services.
               </p>
             </div>
+            {loading && <Loader />}
             <div className="price_card_container">
               {packages.slice(0, 3).map((pkg) => (
                 <div className="price_card" key={pkg.id}>
@@ -208,33 +202,31 @@ function Hero() {
               ))}
             </div>
 
-            <div className="sub_card_price">
-              {packages.length > 3 && (
-                <>
-                  <div>
-                    <p className="topic_sub_price">{packages[3].title}</p>
-                    <div
-                      className="pera_sub_price"
-                      dangerouslySetInnerHTML={{
-                        __html: packages[3].short_description,
-                      }}
-                    />
+            {packages.length > 3 && (
+              <div className="sub_card_price">
+                <div>
+                  <p className="topic_sub_price">{packages[3].title}</p>
+                  <div
+                    className="pera_sub_price"
+                    dangerouslySetInnerHTML={{
+                      __html: packages[3].short_description,
+                    }}
+                  />
+                </div>
+                <div className="lft_clm">
+                  <div className="sub_card_price_main">
+                    <p className="fm_price">From</p>
+                    <p className="sub_card_price_100">${packages[3].price}</p>
                   </div>
-                  <div className="lft_clm">
-                    <div className="sub_card_price_main">
-                      <p className="fm_price">From</p>
-                      <p className="sub_card_price_100">${packages[3].price}</p>
-                    </div>
-                    <button
-                      className="sub_card_btn_price"
-                      onClick={() => handlePackageSelect(packages[3])}
-                    >
-                      Choose
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+                  <button
+                    className="sub_card_btn_price"
+                    onClick={() => handlePackageSelect(packages[3])}
+                  >
+                    Choose
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

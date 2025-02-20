@@ -6,8 +6,9 @@ import {
   validatePromoCode,
   updateCartAddons,
   deleteCartItem,
-  getCart, // Add this import
+  getCart,
 } from "../../../../../Services/apiCalls";
+import Loader from "../../../../Common/Loader";
 
 function CartContiner() {
   const [quantity, setQuantity] = useState(1);
@@ -80,19 +81,6 @@ function CartContiner() {
 
     fetchAddons();
   }, [packageId]);
-
-  // useEffect(() => {
-  //   // Load cart data from localStorage on component mount
-  //   const savedCart = localStorage.getItem("cartItems");
-  //   const savedTotal = localStorage.getItem("cartTotal");
-
-  //   if (savedCart) {
-  //     setCart(JSON.parse(savedCart));
-  //   }
-  //   if (savedTotal) {
-  //     setTotal(parseFloat(savedTotal));
-  //   }
-  // }, []);
 
   const handleClickPromoOpen = () => {
     setShowPromoForm(!showPromoForm);
@@ -395,127 +383,8 @@ function CartContiner() {
     });
   };
 
-  // const getTopicDetails = () => {
-  //   console.log(packageDetails, "packageDetails");
-
-  //   if (packageDetails?.title === "Professional Edge") {
-  //     return {
-  //       paragraph1: "Cover Letter",
-  //       price1: "60",
-  //       svg1: (
-  //         <svg
-  //           xmlns="http://www.w3.org/2000/svg"
-  //           width="24"
-  //           height="24"
-  //           viewBox="0 0 24 24"
-  //           fill="none"
-  //         >
-  //           <g clip-path="url(#clip0_114_519)">
-  //             <path
-  //               d="M17 20H6C5.20435 20 4.44129 19.6839 3.87868 19.1213C3.31607 18.5587 3 17.7956 3 17C3 16.2044 3.31607 15.4413 3.87868 14.8787C4.44129 14.3161 5.20435 14 6 14H17C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20ZM17 20H18C18.7956 20 19.5587 19.6839 20.1213 19.1213C20.6839 18.5587 21 17.7956 21 17V6C21 5.46957 20.7893 4.96086 20.4142 4.58579C20.0391 4.21071 19.5304 4 19 4H9C8.46957 4 7.96086 4.21071 7.58579 4.58579C7.21071 4.96086 7 5.46957 7 6V14"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //           </g>
-  //           <defs>
-  //             <clipPath id="clip0_114_519">
-  //               <rect width="24" height="24" fill="white" />
-  //             </clipPath>
-  //           </defs>
-  //         </svg>
-  //       ),
-  //     };
-  //   } else if (packageDetails?.title === "Executive Boost") {
-  //     return {
-  //       paragraph1: "LinkedIn Makeover",
-  //       paragraph2: "Cover Letter",
-  //       svg1: (
-  //         <svg
-  //           xmlns="http://www.w3.org/2000/svg"
-  //           width="24"
-  //           height="24"
-  //           viewBox="0 0 24 24"
-  //           fill="none"
-  //         >
-  //           <g clip-path="url(#clip0_114_5380)">
-  //             <path
-  //               d="M4 6C4 5.46957 4.21071 4.96086 4.58579 4.58579C4.96086 4.21071 5.46957 4 6 4H18C18.5304 4 19.0391 4.21071 19.4142 4.58579C19.7893 4.96086 20 5.46957 20 6V18C20 18.5304 19.7893 19.0391 19.4142 19.4142C19.0391 19.7893 18.5304 20 18 20H6C5.46957 20 4.96086 19.7893 4.58579 19.4142C4.21071 19.0391 4 18.5304 4 18V6Z"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //             <path
-  //               d="M8 11V16"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //             <path
-  //               d="M8 8V8.01"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //             <path
-  //               d="M12 16V11"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //             <path
-  //               d="M16 16V13C16 12.4696 15.7893 11.9609 15.4142 11.5858C15.0391 11.2107 14.5304 11 14 11C13.4696 11 12.9609 11.2107 12.5858 11.5858C12.2107 11.9609 12 12.4696 12 13"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //           </g>
-  //           <defs>
-  //             <clipPath id="clip0_114_5380">
-  //               <rect width="24" height="24" fill="white" />
-  //             </clipPath>
-  //           </defs>
-  //         </svg>
-  //       ),
-  //       svg2: (
-  //         <svg
-  //           xmlns="http://www.w3.org/2000/svg"
-  //           width="24"
-  //           height="24"
-  //           viewBox="0 0 24 24"
-  //           fill="none"
-  //         >
-  //           <g clip-path="url(#clip0_114_519)">
-  //             <path
-  //               d="M17 20H6C5.20435 20 4.44129 19.6839 3.87868 19.1213C3.31607 18.5587 3 17.7956 3 17C3 16.2044 3.31607 15.4413 3.87868 14.8787C4.44129 14.3161 5.20435 14 6 14H17C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20ZM17 20H18C18.7956 20 19.5587 19.6839 20.1213 19.1213C20.6839 18.5587 21 17.7956 21 17V6C21 5.46957 20.7893 4.96086 20.4142 4.58579C20.0391 4.21071 19.5304 4 19 4H9C8.46957 4 7.96086 4.21071 7.58579 4.58579C7.21071 4.96086 7 5.46957 7 6V14"
-  //               stroke="black"
-  //               stroke-width="2"
-  //               stroke-linecap="round"
-  //               stroke-linejoin="round"
-  //             />
-  //           </g>
-  //           <defs>
-  //             <clipPath id="clip0_114_519">
-  //               <rect width="24" height="24" fill="white" />
-  //             </clipPath>
-  //           </defs>
-  //         </svg>
-  //       ),
-  //     };
-  //   } else {
-  //     return null; // If no topic matches, return null
-  //   }
-  // };
-
   const handleReadyToPay = async () => {
     if (isTermsAccepted) {
-      // Save cart total and details to localStorage before navigation
       localStorage.setItem("totalAmount", total.toString());
       localStorage.setItem("getTopic", topic);
       localStorage.setItem("getCount", getTotalCount().toString());
@@ -529,7 +398,6 @@ function CartContiner() {
         })
       );
 
-      // Save applied promo if exists
       if (appliedPromo) {
         localStorage.setItem("appliedPromo", JSON.stringify(appliedPromo));
         localStorage.setItem("promoDiscount", promoDiscount.toString());
@@ -540,7 +408,6 @@ function CartContiner() {
     setError(null);
   };
 
-  // Calculate total count of all items in the cart
   const getTotalCount = () => {
     return cart.reduce((acc, item) => acc + item.quantity, 1);
   };
@@ -574,7 +441,6 @@ function CartContiner() {
 
   useEffect(() => {
     return () => {
-      // Clean up localStorage when navigating away without payment
       if (window.location.pathname !== "/payment") {
         localStorage.removeItem("cartItems");
         localStorage.removeItem("cartTotal");
@@ -762,7 +628,9 @@ function CartContiner() {
               </div>
               <div className="enhance_section_cart">
                 {loading ? (
-                  <p>Loading addons...</p>
+                  <div className="loader-container">
+                    <Loader />
+                  </div>
                 ) : (
                   <>
                     <div className="enhance_section_cart_topic_set">

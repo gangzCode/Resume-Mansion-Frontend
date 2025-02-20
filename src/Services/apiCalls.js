@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// export const baseUrl = "http://127.0.0.1:8000/api";
 export const baseUrl = "https://jtlanka.com/custom/API/public/api";
 
 export const getIPAddress = async () => {
@@ -343,6 +344,32 @@ export const getPreviousOrders = async () => {
     });
     return response.data;
   } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const updateCurrentOrder = async (orderData) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.put(
+      `${baseUrl}/current-order-update`,
+      {
+        order_id: orderData.order_id,
+        payment_method_id: orderData.payment_method_id,
+        addon_id: orderData.addon_id,
+        quantity: orderData.quantity,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Update current order error:", error);
     throw error.response ? error.response.data : error;
   }
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./OrderStatusCard.css";
 import { getPreviousOrders } from "../../../../../../../Services/apiCalls";
+import Loader from "../../../../../../Common/Loader";
 function OrderStatusCard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ function OrderStatusCard() {
     fetchPreviousOrders();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader />;
   if (error) return <div>Error: {error}</div>;
   if (orders.length === 0) {
     return (
