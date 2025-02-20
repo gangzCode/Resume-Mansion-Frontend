@@ -46,7 +46,7 @@ function Register() {
       setSuccess("Registration successful!");
       showSnackbar("Registration successful! Please login.", "success");
       console.log("User registered successfully:", response);
-      navigate("/login");
+      navigate("/");
     } catch (err) {
       setError(err.message || "Registration failed");
       showSnackbar(err.message || "Registration failed", "error");

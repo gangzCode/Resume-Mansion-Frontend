@@ -10,7 +10,7 @@ function Cookies({ onClose }) {
                         <p className='cookis_pera'>Cookies help us to enhance your experience, tailar ads to your interests and improve our website. <span className='lernmore_cookis'>Learn more and manage</span></p>
                     </div>
                     <div className='cookis_box_two'>
-                    <button className='cookis_box_two_btn_one'>
+                    <button onClick={onClose} className='cookis_box_two_btn_one'>
                         Accept all
                     </button>
                     <button onClick={onClose} className='cookis_box_two_btn_two'>
