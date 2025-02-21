@@ -67,14 +67,20 @@
   justify-content: space-between;
 }
 .cart_card_pera {
-  width: 342px;
-  color: var(--text-secondary, #4b5852);
-  font-family: Inter;
   font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 20px;
+  line-height: 1.5;
+  color: #4B5852;
+  margin: 8px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
+
 .cart_card_qty_update {
   display: flex;
   height: 34px;

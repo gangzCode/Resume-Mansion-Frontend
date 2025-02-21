@@ -69,8 +69,8 @@ function CartContiner() {
       try {
         if (packageId) {
           const response = await getPackageAddons(packageId);
-          const addonsList = response.slice(1);
-          setAddons(addonsList);
+
+          setAddons(response);
         }
       } catch (error) {
         console.error("Error fetching addons:", error);
@@ -207,7 +207,7 @@ function CartContiner() {
 
           if (packageId) {
             const addonsResponse = await getPackageAddons(packageId);
-            const addonsList = addonsResponse.slice(1);
+            const addonsList = addonsResponse;
             setAddons(addonsList);
           }
         }
@@ -221,14 +221,11 @@ function CartContiner() {
   };
 
   const getSelectedServiceNames = () => {
-    console.log(cart, "cart");
-
     return cart
       .map((item) => {
-        if (item.title === "Add LinkedIn Makeover") {
-          return {
+        const serviceConfig = {
+          "Add LinkedIn Makeover": {
             name: "LinkedIn Makeover",
-            price: item.price,
             icon: (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -237,55 +234,25 @@ function CartContiner() {
                 viewBox="0 0 24 24"
                 fill="none"
               >
-                <g clip-path="url(#clip0_114_5380)">
-                  <path
-                    d="M4 6C4 5.46957 4.21071 4.96086 4.58579 4.58579C4.96086 4.21071 5.46957 4 6 4H18C18.5304 4 19.0391 4.21071 19.4142 4.58579C19.7893 4.96086 20 5.46957 20 6V18C20 18.5304 19.7893 19.0391 19.4142 19.4142C19.0391 19.7893 18.5304 20 18 20H6C5.46957 20 4.96086 19.7893 4.58579 19.4142C4.21071 19.0391 4 18.5304 4 18V6Z"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M8 11V16"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M8 8V8.01"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M12 16V11"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M16 16V13C16 12.4696 15.7893 11.9609 15.4142 11.5858C15.0391 11.2107 14.5304 11 14 11C13.4696 11 12.9609 11.2107 12.5858 11.5858C12.2107 11.9609 12 12.4696 12 13"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_114_5380">
-                    <rect width="24" height="24" fill="white" />
-                  </clipPath>
-                </defs>
+                <path
+                  d="M4 6C4 5.46957 4.21071 4.96086 4.58579 4.58579C4.96086 4.21071 5.46957 4 6 4H18C18.5304 4 19.0391 4.21071 19.4142 4.58579C19.7893 4.96086 20 5.46957 20 6V18C20 18.5304 19.7893 19.0391 19.4142 19.4142C19.0391 19.7893 18.5304 20 18 20H6C5.46957 20 4.96086 19.7893 4.58579 19.4142C4.21071 19.0391 4 18.5304 4 18V6Z"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 11V16M8 8V8.01M12 16V11M16 16V13C16 12.4696 15.7893 11.9609 15.4142 11.5858C15.0391 11.2107 14.5304 11 14 11C13.4696 11 12.9609 11.2107 12.5858 11.5858C12.2107 11.9609 12 12.4696 12 13"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ),
-          };
-        } else if (item.title === "Add Personalized Cover Letter") {
-          return {
+          },
+          "Add Personalized Cover Letter": {
             name: "Cover Letter",
-            price: item.price,
             icon: (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -294,27 +261,18 @@ function CartContiner() {
                 viewBox="0 0 24 24"
                 fill="none"
               >
-                <g clip-path="url(#clip0_114_519)">
-                  <path
-                    d="M17 20H6C5.20435 20 4.44129 19.6839 3.87868 19.1213C3.31607 18.5587 3 17.7956 3 17C3 16.2044 3.31607 15.4413 3.87868 14.8787C4.44129 14.3161 5.20435 14 6 14H17C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20ZM17 20H18C18.7956 20 19.5587 19.6839 20.1213 19.1213C20.6839 18.5587 21 17.7956 21 17V6C21 5.46957 20.7893 4.96086 20.4142 4.58579C20.0391 4.21071 19.5304 4 19 4H9C8.46957 4 7.96086 4.21071 7.58579 4.58579C7.21071 4.96086 7 5.46957 7 6V14"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_114_519">
-                    <rect width="24" height="24" fill="white" />
-                  </clipPath>
-                </defs>
+                <path
+                  d="M17 20H6C5.20435 20 4.44129 19.6839 3.87868 19.1213C3.31607 18.5587 3 17.7956 3 17C3 16.2044 3.31607 15.4413 3.87868 14.8787C4.44129 14.3161 5.20435 14 6 14H17M17 20H18C18.7956 20 19.5587 19.6839 20.1213 19.1213C20.6839 18.5587 21 17.7956 21 17V6C21 5.46957 20.7893 4.96086 20.4142 4.58579C20.0391 4.21071 19.5304 4 19 4H9C8.46957 4 7.96086 4.21071 7.58579 4.58579C7.21071 4.96086 7 5.46957 7 6V14"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ),
-          };
-        } else if (item.title === "Express Delivery") {
-          return {
+          },
+          "Express Delivery": {
             name: "Express Delivery",
-            price: item.price,
             icon: (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -323,48 +281,36 @@ function CartContiner() {
                 viewBox="0 0 24 24"
                 fill="none"
               >
-                <g clip-path="url(#clip0_208_18613)">
-                  <path
-                    d="M5 17C5 17.5304 5.21071 18.0391 5.58579 18.4142C5.96086 18.7893 6.46957 19 7 19C7.53043 19 8.03914 18.7893 8.41421 18.4142C8.78929 18.0391 9 17.5304 9 17C9 16.4696 8.78929 15.9609 8.41421 15.5858C8.03914 15.2107 7.53043 15 7 15C6.46957 15 5.96086 15.2107 5.58579 15.5858C5.21071 15.9609 5 16.4696 5 17Z"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                  <path
-                    d="M15 17C15 17.5304 15.2107 18.0391 15.5858 18.4142C15.9609 18.7893 16.4696 19 17 19C17.5304 19 18.0391 18.7893 18.4142 18.4142C18.7893 18.0391 19 17.5304 19 17C19 16.4696 18.7893 15.9609 18.4142 15.5858C18.0391 15.2107 17.5304 15 17 15C16.4696 15 15.9609 15.2107 15.5858 15.5858C15.2107 15.9609 15 16.4696 15 17Z"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                  <path
-                    d="M5 17H3V13M2 5H13V17M9 17H15M19 17H21V11M21 11H13M21 11L18 6H13"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                  <path
-                    d="M3 9H7"
-                    stroke="black"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                </g>
-                <defs>
-                  <clipPath id="clip0_208_18613">
-                    <rect width="24" height="24" fill="white"></rect>
-                  </clipPath>
-                </defs>
+                <path
+                  d="M5 17C5 17.5304 5.21071 18.0391 5.58579 18.4142C5.96086 18.7893 6.46957 19 7 19C7.53043 19 8.03914 18.7893 8.41421 18.4142C8.78929 18.0391 9 17.5304 9 17C9 16.4696 8.78929 15.9609 8.41421 15.5858C8.03914 15.2107 7.53043 15 7 15C6.46957 15 5.96086 15.2107 5.58579 15.5858C5.21071 15.9609 5 16.4696 5 17ZM15 17C15 17.5304 15.2107 18.0391 15.5858 18.4142C15.9609 18.7893 16.4696 19 17 19C17.5304 19 18.0391 18.7893 18.4142 18.4142C18.7893 18.0391 19 17.5304 19 17C19 16.4696 18.7893 15.9609 18.4142 15.5858C18.0391 15.2107 17.5304 15 17 15C16.4696 15 15.9609 15.2107 15.5858 15.5858C15.2107 15.9609 15 16.4696 15 17Z"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 17H3V13M2 5H13V17M9 17H15M19 17H21V11M21 11H13M21 11L18 6H13M3 9H7"
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ),
-          };
-        }
-        return null; // Default fallback for unmatched names
+          },
+        };
+
+        const config = serviceConfig[item.title];
+        if (!config) return null;
+
+        return {
+          name: config.name,
+          price: item.price,
+          quantity: item.quantity,
+          icon: config.icon,
+        };
       })
-      .filter(Boolean); // Remove null/undefined values
+      .filter(Boolean);
   };
 
   const getSelectedServicePrice = () => {
@@ -845,6 +791,9 @@ function CartContiner() {
                               <p className="topsetion_card_section_two_continer_topic">
                                 {service.name}
                               </p>
+                              <p className="topsetion_card_section_two_continer_topic">
+                                × {service.quantity}
+                              </p>
                             </div>
                             <p class="topsetion_card_section_two_continer_topic">
                               ${service.price}
@@ -1017,7 +966,7 @@ function CartContiner() {
                     <div className="amounr_box_card_data">
                       <p className="amounr_box_cardonee">Sub Total</p>
                       <p className="amounr_box_cardonee">
-                        ${packageDetails?.price}
+                        ${packageDetails?.price || 0}
                       </p>
                     </div>
 

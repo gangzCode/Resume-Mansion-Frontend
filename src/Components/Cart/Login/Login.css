@@ -191,10 +191,63 @@
   gap: 12px;
   align-self: stretch;
 }
+.phone-input-container {
+  margin-bottom: 16px;
+  width: 100%;
+}
 
+.phone-input-container .form-control {
+  width: 100% !important;
+  height: 48px !important;
+  padding: 8px 48px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 14px !important;
+  color: #4b5852 !important;
+}
+
+.phone-input-container .form-control:focus {
+  border-color: #237655 !important;
+  box-shadow: 0 0 0 1px #237655 !important;
+}
+
+.country-dropdown {
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px 0 0 8px !important;
+  height: 46px !important;
+}
+
+.country-dropdown:hover {
+  background: #f3f4f6 !important;
+}
+
+.country-dropdown .selected-flag {
+  padding: 0 8px !important;
+}
+
+.country-list {
+  margin: 4px 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.country-list .country {
+  padding: 8px 10px !important;
+}
+
+.country-list .country:hover {
+  background: #f3f4f6 !important;
+}
+
+.country-list .country.highlight {
+  background: #237655 !important;
+}
 
 @media (max-width: 500px) {
-  .login_continer{
+  .login_continer {
     width: 100%;
   }
 }

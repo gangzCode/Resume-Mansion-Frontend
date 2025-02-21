@@ -216,7 +216,7 @@ function Hero() {
                 <div className="lft_clm">
                   <div className="sub_card_price_main">
                     <p className="fm_price">From</p>
-                    <p className="sub_card_price_100">${packages[3].price}</p>
+                    <p className="sub_card_price_100">$60</p>
                   </div>
                   <button
                     className="sub_card_btn_price"

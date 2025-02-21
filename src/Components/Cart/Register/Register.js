@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { registerUser } from "../../../Services/apiCalls";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "../../../Context/SnackbarContext";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -22,6 +24,13 @@ function Register() {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const handlePhoneChange = (value) => {
+    setFormData({
+      ...formData,
+      contact_no: value,
     });
   };
 
@@ -171,13 +180,14 @@ function Register() {
                       onChange={handleChange}
                     />
                     <label className="from_label_login">Contact Number</label>
-                    <input
-                      type="text"
-                      name="contact_no"
-                      className="login_input_field new_btn_log"
-                      placeholder="Enter your contact number"
+                    <PhoneInput
+                      country={"us"}
                       value={formData.contact_no}
-                      onChange={handleChange}
+                      onChange={handlePhoneChange}
+                      inputClass="login_input_field new_btn_log"
+                      containerClass="phone-input-container"
+                      buttonClass="country-dropdown"
+                      placeholder="Enter your contact number"
                     />
                     <label className="from_label_login">Password</label>
                     <input

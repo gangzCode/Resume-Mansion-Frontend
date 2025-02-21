@@ -78,7 +78,9 @@ function NavBar() {
       if (
         (window.scrollY > lastScrollY && window.scrollY > 100) ||
         location.pathname === "/itemCart" ||
-        location.pathname === "/currentOrder"
+        location.pathname === "/currentOrder" ||
+        location.pathname === "/emptyCart" ||
+        location.pathname === "/previousOrders"
       ) {
         setIsVisible(false);
       } else {
