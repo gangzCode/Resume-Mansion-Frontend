@@ -245,6 +245,24 @@
 .country-list .country.highlight {
   background: #237655 !important;
 }
+.error-style {
+  color: "#DC2626";
+  font-size: 14px;
+  margin-top: 8px;
+  display: "flex";
+  align-items: "center";
+  gap: "8px";
+}
+
+.error-input {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+.phone-input-container.error input {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
 
 @media (max-width: 500px) {
   .login_continer {

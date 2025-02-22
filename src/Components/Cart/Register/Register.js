@@ -54,11 +54,19 @@ function Register() {
       );
       setSuccess("Registration successful!");
       showSnackbar("Registration successful! Please login.", "success");
-      console.log("User registered successfully:", response);
       navigate("/");
     } catch (err) {
-      setError(err.message || "Registration failed");
-      showSnackbar(err.message || "Registration failed", "error");
+      if (err.http_status === 400 && err.errors) {
+        const errorMessages = [];
+        Object.entries(err.errors).forEach(([field, messages]) => {
+          errorMessages.push(...messages);
+        });
+        setError(errorMessages);
+        // showSnackbar(errorMessages[0], "error");
+      } else {
+        setError(err.message || "Registration failed");
+        showSnackbar(err.message || "Registration failed", "error");
+      }
       console.error("Error registering user:", err);
     } finally {
       setLoading(false);
@@ -174,21 +182,83 @@ function Register() {
                     <input
                       type="email"
                       name="email"
-                      className="login_input_field new_btn_log"
+                      className={`login_input_field new_btn_log ${
+                        error?.errors?.email ? "error-input" : ""
+                      }`}
                       placeholder="Enter your email address"
                       value={formData.email}
                       onChange={handleChange}
                     />
+                    {error?.errors?.email && (
+                      <div className="error-style">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                        >
+                          <path
+                            d="M8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667Z"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M8 5.33333V8"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M8 10.6667H8.00667"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span>{error.errors.email[0]}</span>
+                      </div>
+                    )}
                     <label className="from_label_login">Contact Number</label>
                     <PhoneInput
                       country={"us"}
                       value={formData.contact_no}
                       onChange={handlePhoneChange}
-                      inputClass="login_input_field new_btn_log"
+                      inputClass={`login_input_field new_btn_log ${
+                        error?.errors?.contact_no ? "error-input" : ""
+                      }`}
                       containerClass="phone-input-container"
                       buttonClass="country-dropdown"
                       placeholder="Enter your contact number"
                     />
+                    {error?.errors?.contact_no && (
+                      <div className="error-style">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                        >
+                          <path
+                            d="M8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667Z"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M8 5.33333V8"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M8 10.6667H8.00667"
+                            stroke="#DC2626"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span>{error.errors.contact_no[0]}</span>
+                      </div>
+                    )}
                     <label className="from_label_login">Password</label>
                     <input
                       type="password"
@@ -216,7 +286,10 @@ function Register() {
                     >
                       {loading ? "Signing up..." : "Sign up"}
                     </button>
-                    {error && <p className="error_message">{error}</p>}
+                    {error &&
+                      error.map((err) => (
+                        <p className="error_message">{err}</p>
+                      ))}
                     {success && <p className="success_message">{success}</p>}
                   </form>
                   <div className="log_hero_bottom_section">
