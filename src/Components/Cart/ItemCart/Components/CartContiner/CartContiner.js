@@ -305,7 +305,7 @@ function CartContiner() {
 
         return {
           name: config.name,
-          price: item.price,
+          price: item.price * item.quantity,
           quantity: item.quantity,
           icon: config.icon,
         };
@@ -321,7 +321,7 @@ function CartContiner() {
             <div class="topsetion_card_section_two_continer_topic_continer">
               <p class="amounr_box_cardonee">{item.title}</p>
             </div>
-            <p class="amounr_box_cardonee">${item.price}</p>
+            <p class="amounr_box_cardonee">${item.price * item.quantity}</p>
           </div>
         );
       }
@@ -997,20 +997,22 @@ function CartContiner() {
                   </div>
                   <p className="cart_continer_main_card_subsetion_pera">
                     By continuing, you agree to our
-                    <span
+                    <a
                       className="agre_nav_item"
-                      onClick={() => (window.location.href = "/privacyPolicy")}
+                      target="_blank"
+                      href="/privacyPolicy"
                     >
                       {" "}
                       Terms & Conditions
-                    </span>{" "}
+                    </a>{" "}
                     and{" "}
-                    <span
+                    <a
                       className="agre_nav_item"
-                      onClick={() => (window.location.href = "/privacyPolicy")}
+                      target="_blank"
+                      href="/privacyPolicy"
                     >
                       Privacy Policy
-                    </span>
+                    </a>
                   </p>
                 </div>
                 {error && (

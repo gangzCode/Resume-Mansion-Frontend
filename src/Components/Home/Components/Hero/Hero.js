@@ -56,16 +56,16 @@ function Hero() {
     }
 
     try {
-      const orderResponse = await getCurrentOrder();
+      // const orderResponse = await getCurrentOrder();
 
-      if (
-        orderResponse.http_status === 200 &&
-        orderResponse.data.length !== 0
-      ) {
-        console.log(orderResponse, "orderResponse");
-        showSnackbar("You have an active order in progress", "warning");
-        return;
-      }
+      // if (
+      //   orderResponse.http_status === 200 &&
+      //   orderResponse.data.length !== 0
+      // ) {
+      //   console.log(orderResponse, "orderResponse");
+      //   showSnackbar("You have an active order in progress", "warning");
+      //   return;
+      // }
 
       localStorage.removeItem("selectedPackage");
 
