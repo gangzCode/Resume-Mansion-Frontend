@@ -373,3 +373,19 @@ export const updateCurrentOrder = async (orderData) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const getPreviousOrderDetails = async (orderId) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.get(`${baseUrl}/get-details/${orderId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};

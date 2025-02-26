@@ -46,22 +46,56 @@ function CartContiner() {
 
   useEffect(() => {
     const storedPackage = localStorage.getItem("selectedPackage");
+    const fetchCartData = async () => {
+      setLoading(true);
+      try {
+        const response = await getCart();
 
-    if (storedPackage) {
-      const parsedPackage = JSON.parse(storedPackage);
+        if (response.http_status === 200) {
+          setOrderId(response.data.order_id);
+          localStorage.setItem("orderId", response.data.order_id);
 
-      setOrderId(Number(localStorage.getItem("orderId")));
-      console.log(parsedPackage.id, "parsedPackage");
-      setPackageDetails(parsedPackage);
-      setpackageId(parsedPackage.id);
-      setTopic(parsedPackage.title);
-      setpkgShortDesc(parsedPackage.shortDescription);
-      setPrice(parsedPackage.price);
-      setTotal(parsedPackage.price);
-    } else {
-      setPrice(0);
-      setTotal(0);
-    }
+          if (storedPackage) {
+            const parsedPackage = JSON.parse(storedPackage);
+            setpackageId(parsedPackage.id);
+            setTopic(parsedPackage.title);
+            setPrice(parsedPackage.price);
+            setpkgShortDesc(parsedPackage.shortDescription);
+
+          } else if (response.data.package_id) {
+
+            setpackageId(response.data.package_id);
+            setTopic(response.data.package);
+            if (response.data.package_price) {
+              setPrice(response.data.package_price);
+            }
+            setpkgShortDesc(response.shortDescription);
+          }
+
+          setTotal(parseFloat(response.data.total));
+
+          const cartItems = response.data.lines.map((line) => ({
+            id: line.addon_id,
+            lineId: line.line_id,
+            title: line.addon,
+            description: line.description,
+            price: parseFloat(line.price),
+            quantity: parseInt(line.quantity),
+          }));
+
+          setCart(cartItems);
+          localStorage.setItem("cartItems", JSON.stringify(cartItems));
+          localStorage.setItem("cartTotal", response.data.total);
+        }
+      } catch (error) {
+        setError("Failed to load cart data");
+        console.error("Fetch cart error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartData();
   }, []);
 
   useEffect(() => {

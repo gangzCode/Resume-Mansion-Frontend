@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+  import React, { useState, useEffect } from "react";
 import "./PriceContent.css";
 import {
   getPackages,
@@ -54,16 +54,16 @@ function PriceContent() {
     }
 
     try {
-      const orderResponse = await getCurrentOrder();
+      // const orderResponse = await getCurrentOrder();
 
-      if (
-        orderResponse.http_status === 200 &&
-        orderResponse.data.length !== 0
-      ) {
-        console.log(orderResponse, "orderResponse");
-        showSnackbar("You have an active order in progress", "warning");
-        return;
-      }
+      // if (
+      //   orderResponse.http_status === 200 &&
+      //   orderResponse.data.length !== 0
+      // ) {
+      //   console.log(orderResponse, "orderResponse");
+      //   showSnackbar("You have an active order in progress", "warning");
+      //   return;
+      // }
 
       localStorage.removeItem("selectedPackage");
 

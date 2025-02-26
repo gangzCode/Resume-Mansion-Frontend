@@ -77,7 +77,7 @@ function Login() {
             previousOrdersResponse.http_status === 200 &&
             previousOrdersResponse.data.length !== 0
           ) {
-            navigate("/pastOrders");
+            navigate("/previousOrders");
             return;
           }
 

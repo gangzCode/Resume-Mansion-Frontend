@@ -13,9 +13,7 @@ function NavBar() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const location = useLocation();
-  const [isHovered, setIsHovered] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
@@ -80,6 +78,7 @@ function NavBar() {
         location.pathname === "/itemCart" ||
         location.pathname === "/currentOrder" ||
         location.pathname === "/emptyCart" ||
+        location.pathname === "/pastOrders" ||
         location.pathname === "/previousOrders"
       ) {
         setIsVisible(false);
@@ -100,6 +99,7 @@ function NavBar() {
       location.pathname === "/itemCart" ||
       location.pathname === "/emptyCart" ||
       location.pathname === "/currentOrder" ||
+      location.pathname === "/pastOrders" ||
       location.pathname === "/previousOrders"
     ) {
       setIsVisible(false);
@@ -363,12 +363,7 @@ function NavBar() {
                   </p>
                 </div>
                 <div className="action_set_nav">
-                  <div
-                    className="icon_set"
-                    onMouseEnter={() => setShowUserMenu(true)}
-                    onMouseLeave={() => setShowUserMenu(false)}
-                    onClick={() => handleUserClick()}
-                  >
+                  <div className="icon_set" onClick={() => handleUserClick()}>
                     <div className="user-icon-container">
                       <svg
                         width="32"
@@ -434,7 +429,7 @@ function NavBar() {
                   </div>
                   <button
                     className="order_btn_nav nroml_verson"
-                    onClick={() => (window.location.href = "/emptyCart")}
+                    onClick={() => handleCartClick()}
                   >
                     Order Now
                   </button>
@@ -672,7 +667,7 @@ function NavBar() {
           </p>
           <button
             className="order_btn_nav_res res_verson"
-            onClick={() => (window.location.href = "/emptyCart")}
+            onClick={() => handleCartClick()}
           >
             Order Now
           </button>
