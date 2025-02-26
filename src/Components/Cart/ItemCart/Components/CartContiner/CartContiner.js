@@ -61,15 +61,13 @@ function CartContiner() {
             setTopic(parsedPackage.title);
             setPrice(parsedPackage.price);
             setpkgShortDesc(parsedPackage.shortDescription);
-
           } else if (response.data.package_id) {
-
             setpackageId(response.data.package_id);
             setTopic(response.data.package);
+            setpkgShortDesc(response.data.short_description);
             if (response.data.package_price) {
               setPrice(response.data.package_price);
             }
-            setpkgShortDesc(response.shortDescription);
           }
 
           setTotal(parseFloat(response.data.total));

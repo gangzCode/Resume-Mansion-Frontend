@@ -160,7 +160,9 @@ function OrderDetails() {
             </svg>
             <p className="detail_cart_top_data_pera">
               {" "}
-              {orderDetails?.lines?.some((line) => line?.addon_id === 4)
+              {orderDetails.lines.some((line) =>
+                line.addon.toLowerCase().includes("express")
+              )
                 ? "1-day delivery"
                 : "2-day delivery"}
             </p>

@@ -292,7 +292,9 @@ function OrderDetails() {
               />
             </svg>
             <p className="detail_cart_top_data_pera">
-              {orderDetails.lines.some((line) => line.addon_id === 4)
+              {orderDetails.lines.some((line) =>
+                line.addon.toLowerCase().includes("express")
+              )
                 ? "1-day delivery"
                 : "2-day delivery"}
             </p>
@@ -394,7 +396,7 @@ function OrderDetails() {
       </div>
 
       {addons
-        .filter((e) => e.id !== 4)
+        .filter((e) => !e.title.toLowerCase().includes("express"))
         .map((addon) => (
           <div key={addon.id} className="link_chat_box">
             <p className="link_chat_box_topic">{addon.title}</p>
