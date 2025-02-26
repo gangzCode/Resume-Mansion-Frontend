@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import "./OrderDetails.css";
 import { useLocation } from "react-router";
 import { getPreviousOrderDetails } from "../../../../../../../Services/apiCalls";
+import Loader from "../../../../../../Common/Loader";
 function OrderDetails() {
   const [copied, setCopied] = useState(false);
   const email = "contact@resumemansion.com";
   const [orderDetails, setOrderDetails] = useState(null);
   const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const orderId = location.state?.id;
 
@@ -15,11 +18,18 @@ function OrderDetails() {
       if (orderId) {
         try {
           const response = await getPreviousOrderDetails(orderId);
-          console.log(response, "response");
+          if (response.http_status_message === "Success") {
+            console.log(response, "response");
 
-          setOrderDetails(response.data);
+            setOrderDetails(response.data);
+          } else {
+            setError("error.message");
+          }
         } catch (error) {
           console.error("Error fetching order details:", error);
+          setError(error.message);
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -33,6 +43,11 @@ function OrderDetails() {
       setTimeout(() => setCopied(false), 2000); // Hide the message after 2 seconds
     });
   };
+
+  if (loading) return <Loader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!orderDetails) return <div>No order details found</div>;
+
   return (
     <div className="order_details_continer_chat">
       <p className="cart_continer_main_card_topsetion_topic">
