@@ -1,8 +1,133 @@
 import React, { useEffect, useState } from "react";
 import "./OrderDetails.css";
 import { useLocation } from "react-router";
-import { getPreviousOrderDetails } from "../../../../../../../Services/apiCalls";
+import {
+  getCurrentOrder,
+  getPackageAddons,
+  getPreviousOrderDetails,
+  updateCurrentOrder,
+} from "../../../../../../../Services/apiCalls";
 import Loader from "../../../../../../Common/Loader";
+import { useSnackbar } from "../../../../../../../Context/SnackbarContext";
+import {
+  CardElement,
+  Elements,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(
+  "pk_test_51Qt02JBCCDTvPwlcSD8dUjs8EdRhNuVccQjTtQ38OryhmBG7C50Kvdca9F9ehiXqBrYcphwMk6RlRqerwovmjdfO00u0qQMgSy"
+);
+
+function PaymentForm({
+  addon,
+  orderDetails,
+  setOrderDetails,
+  onClose,
+  onSuccess,
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { showSnackbar } = useSnackbar();
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: elements.getElement(CardElement),
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const currentLine = orderDetails.lines.find(
+        (line) => line.addon_id === addon.id
+      );
+      const currentQuantity = currentLine ? currentLine.quantity : 0;
+
+      const orderData = {
+        order_id: orderDetails.order_id,
+        payment_method_id: paymentMethod.id,
+        addon_id: addon.id,
+        quantity: parseFloat(currentQuantity) + 1,
+      };
+
+      const response = await updateCurrentOrder(orderData);
+
+      if (response.http_status === 200) {
+        const updatedOrderDetails = {
+          ...orderDetails,
+          lines: response.data.lines,
+          total: response.data.total,
+        };
+        setOrderDetails(updatedOrderDetails);
+
+        setTimeout(() => {
+          showSnackbar("Add-on added successfully", "success");
+        }, 1500);
+
+        onSuccess();
+        onClose();
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="payment-modal">
+      <div className="payment-modal-content">
+        <h3>Pay for {addon.title}</h3>
+        <p>Amount: ${addon.price}</p>
+        <form onSubmit={handleSubmit}>
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#424770",
+                  "::placeholder": {
+                    color: "#aab7c4",
+                  },
+                  iconColor: "#237655",
+                },
+                invalid: {
+                  color: "#9e2146",
+                  iconColor: "#9e2146",
+                },
+              },
+              hidePostalCode: true,
+            }}
+            className="card-element"
+          />
+          {error && <div className="error-message">{error}</div>}
+          <div className="payment-buttons">
+            <button className="pay-button" type="submit" disabled={loading}>
+              {loading ? "Processing..." : "Pay Now"}
+            </button>
+            <button className="cancel-button" type="button" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function OrderDetails() {
   const [copied, setCopied] = useState(false);
   const email = "contact@resumemansion.com";
@@ -10,8 +135,41 @@ function OrderDetails() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addons, setAddons] = useState([]);
+  const { showSnackbar } = useSnackbar();
+  const [selectedAddon, setSelectedAddon] = useState(null);
 
   const orderId = location.state?.id;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const orderResponse = await getCurrentOrder();
+        if (orderResponse.http_status_message === "Success") {
+          setOrderDetails(orderResponse.data);
+
+          const addonsResponse = await getPackageAddons(
+            orderResponse.data.package_id
+          );
+
+          console.log(addonsResponse, "addonsResponse");
+
+          if (addonsResponse.length > 0) {
+            setAddons(addonsResponse);
+          }
+        } else {
+          setError("error.message");
+        }
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -42,6 +200,14 @@ function OrderDetails() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000); // Hide the message after 2 seconds
     });
+  };
+
+  const handlePaymentSuccess = () => {
+    showSnackbar("Payment successful", "success");
+  };
+
+  const handlePayClick = (addon) => {
+    setSelectedAddon(addon);
   };
 
   if (loading) return <Loader />;
@@ -201,9 +367,13 @@ function OrderDetails() {
           </div>
         </div>
       </div>
-      <button className="order_details_continer_chat_againbtn">
-        Order again
-      </button>
+
+      {orderDetails.status === "Delivered" && (
+        <button className="order_details_continer_chat_againbtn">
+          Order again
+        </button>
+      )}
+
       <div className="chat_help_box">
         <p className="topic_need_order">Need a help with your order? </p>
         <p className="topic_pera_need_order">
@@ -214,6 +384,45 @@ function OrderDetails() {
           {copied && <span className="copdmsgmail">Copied !</span>}
         </p>
       </div>
+
+      {orderDetails.status !== "delivered" &&
+        addons
+          .filter((addon) => {
+            const hasExpressAddon = orderDetails.lines.some((line) =>
+              line.addon.toLowerCase().includes("express")
+            );
+
+            return hasExpressAddon
+              ? !addon.title.toLowerCase().includes("express")
+              : true;
+          })
+          .map((addon) => (
+            <div key={addon.id} className="link_chat_box">
+              <p className="link_chat_box_topic">{addon.title}</p>
+              <p className="link_chat_box_pera">{addon.description}</p>
+              <div className="link_chat_box_action">
+                <p className="link_chat_box_action_pera">+${addon.price}</p>
+                <button
+                  className="link_chat_box_action_btn"
+                  onClick={() => handlePayClick(addon)}
+                >
+                  Pay Now
+                </button>
+              </div>
+            </div>
+          ))}
+
+      {selectedAddon && (
+        <Elements stripe={stripePromise}>
+          <PaymentForm
+            addon={selectedAddon}
+            orderDetails={orderDetails}
+            setOrderDetails={setOrderDetails}
+            onClose={() => setSelectedAddon(null)}
+            onSuccess={handlePaymentSuccess}
+          />
+        </Elements>
+      )}
     </div>
   );
 }

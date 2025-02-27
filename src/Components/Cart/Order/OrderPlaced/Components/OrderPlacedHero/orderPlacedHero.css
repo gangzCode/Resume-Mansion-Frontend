@@ -122,7 +122,26 @@
   margin: 0 auto;
   justify-content: center;
 }
+.order-again-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
 
+.order-again-btn {
+  background-color: #0d5438;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.order-again-btn:hover {
+  background-color: #0a442e;
+}
 @media (max-width: 1370px) {
   .OrderPlacedHeroContiner_sub_one {
     display: flex;
@@ -173,14 +192,13 @@
     height: 137px;
     padding-top: 40px;
   }
-  .OrderPlacedHeroContiner_sub_two{
+  .OrderPlacedHeroContiner_sub_two {
     width: 100%;
   }
 }
 @media (max-width: 490px) {
   .OrderPlacedHeroContiner {
     height: 175px;
- 
   }
   .OrderPlacedHeroContiner_sub {
     flex-direction: column;
