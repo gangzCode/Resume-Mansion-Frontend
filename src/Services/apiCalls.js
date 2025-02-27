@@ -389,3 +389,44 @@ export const getPreviousOrderDetails = async (orderId) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const getOrderMessages = async (orderId) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.get(`${baseUrl}/messages/${orderId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Get order messages error:", error);
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const sendOrderMessage = async (orderId, message) => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.post(
+      `${baseUrl}/message`,
+      {
+        order_id: orderId,
+        message: message,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Send message error:", error);
+    throw error.response ? error.response.data : error;
+  }
+};

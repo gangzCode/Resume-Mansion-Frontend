@@ -395,23 +395,24 @@ function OrderDetails() {
         </div>
       </div>
 
-      {addons
-        .filter((e) => !e.title.toLowerCase().includes("express"))
-        .map((addon) => (
-          <div key={addon.id} className="link_chat_box">
-            <p className="link_chat_box_topic">{addon.title}</p>
-            <p className="link_chat_box_pera">{addon.description}</p>
-            <div className="link_chat_box_action">
-              <p className="link_chat_box_action_pera">+${addon.price}</p>
-              <button
-                className="link_chat_box_action_btn"
-                onClick={() => handlePayClick(addon)}
-              >
-                Pay Now
-              </button>
+      {orderDetails.status !== "delivered" &&
+        addons
+          .filter((e) => !e.title.toLowerCase().includes("express"))
+          .map((addon) => (
+            <div key={addon.id} className="link_chat_box">
+              <p className="link_chat_box_topic">{addon.title}</p>
+              <p className="link_chat_box_pera">{addon.description}</p>
+              <div className="link_chat_box_action">
+                <p className="link_chat_box_action_pera">+${addon.price}</p>
+                <button
+                  className="link_chat_box_action_btn"
+                  onClick={() => handlePayClick(addon)}
+                >
+                  Pay Now
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
       {selectedAddon && (
         <Elements stripe={stripePromise}>

@@ -122,6 +122,7 @@
   margin: 0 auto;
   justify-content: center;
 }
+
 @media (max-width: 1370px) {
   .OrderPlacedHeroContiner_sub_one {
     display: flex;
