@@ -1,19 +1,138 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./OrderPlacedChat.css";
 import Avatar from "./img/oli.webp";
 import AvatarSSend from "./img/Avatarsend.png";
 import temp1 from "./img/temp1.png";
 import temp2 from "./img/temp2.png";
 import temp3 from "./img/temp4.png";
+import {
+  getCurrentOrder,
+  getOrderMessages,
+  sendOrderMessage,
+} from "../../../../../../Services/apiCalls";
+import { useParams } from "react-router-dom";
+import Loader from "../../../../../Common/Loader";
+
 function OrderPlacedChat() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [orderData, setOrderData] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [messageText, setMessageText] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  const chatContainerRef = useRef(null);
+
+  const { orderId } = useParams();
 
   const images = [
     { src: temp1, name: "a" },
     { src: temp2, name: "b" },
     { src: temp3, name: "c" },
   ];
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      const scrollContainer = chatContainerRef.current;
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      try {
+        setLoading(true);
+        const orderResponse = await getCurrentOrder();
+
+        if (orderResponse && orderResponse.data) {
+          setOrderData(orderResponse.data);
+
+          const messagesResponse = await getOrderMessages(
+            orderResponse.data.order_id
+          );
+
+          if (messagesResponse && messagesResponse.messages) {
+            const formattedMessages = messagesResponse.messages.map((msg) => ({
+              message: msg.message,
+              sender_type: msg.side === "right" ? "user" : "admin",
+              sender_name: msg.user || "Team Member",
+              created_at: msg.created_at || new Date().toISOString(),
+            }));
+
+            console.log("formattedMessages", formattedMessages);
+
+            setMessages(formattedMessages);
+          }
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching order data:", err);
+        setError(
+          "Failed to load order data. Please refresh the page or try again later."
+        );
+        setLoading(false);
+      }
+    };
+
+    fetchOrderData();
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!orderData) return;
+
+    if (messageText.trim() && selectedFiles.length > 0) {
+      alert(
+        "Please send either a message OR files, not both at the same time."
+      );
+      return;
+    }
+
+    if (!messageText.trim() && selectedFiles.length === 0) return;
+
+    try {
+      setSendingMessage(true);
+
+      await sendOrderMessage(
+        orderData.order_id,
+        messageText.trim() || selectedFiles[0]
+      );
+
+      setMessageText("");
+      setSelectedFiles([]);
+
+      const messagesResponse = await getOrderMessages(orderData.order_id);
+
+      if (messagesResponse && messagesResponse.messages) {
+        const formattedMessages = messagesResponse.messages.map((msg) => ({
+          message: msg.message,
+          sender_type: msg.side === "right" ? "user" : "admin",
+          sender_name: msg.user || "Team Member",
+          created_at: msg.created_at || new Date().toISOString(),
+          attachments: msg.attachments || [],
+        }));
+ 
+        setMessages(formattedMessages);
+        setTimeout(scrollToBottom, 100);
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleOrderAgain = () => {
+    window.location.href = "/order";
+  };
 
   const openModal = (index) => {
     setCurrentImageIndex(index);
@@ -31,6 +150,7 @@ function OrderPlacedChat() {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
     }
   };
+
   const getBackgroundImage = (index) => {
     return {
       backgroundImage: `url(${images[index].src})`,
@@ -38,6 +158,64 @@ function OrderPlacedChat() {
       backgroundPosition: "center",
     };
   };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+  };
+
+  const hasReachedStatus = (checkStatus) => {
+    if (!orderData || !orderData.status) return false;
+
+    const statusFlow = [
+      "Place order",
+      "Requirements submitted",
+      "In progress",
+      "Delivered",
+    ];
+
+    const currentIndex = statusFlow.indexOf(orderData.status);
+    const checkIndex = statusFlow.indexOf(checkStatus);
+
+    return currentIndex >= checkIndex && checkIndex !== -1;
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter((file) => file.type === "application/pdf");
+
+    if (files.length !== validFiles.length) {
+      alert("Only PDF files are allowed.");
+    }
+
+    setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
+
+    e.target.value = null;
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  const hasTextMessage = messageText.trim().length > 0;
+  const hasFiles = selectedFiles.length > 0;
+
   return (
     <div>
       <div className="OrderPlacedChat_continer">
@@ -175,68 +353,74 @@ function OrderPlacedChat() {
             </svg>
           </div>
         </div>
-        <div className="OrderPlacedChat_section_scroll_continer">
+
+        <div
+          className="OrderPlacedChat_section_scroll_continer"
+          ref={chatContainerRef}
+        >
+          {loading && <Loader />}
           <div className="OrderPlacedChat_section_continer">
-            <div className="OrderPlacedChat_section_one">
-              <div className="OrderPlacedChat_section_one_icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_40000010_7846)">
-                    <path
-                      d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12L20 7.5"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12V21"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12L4 7.5"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M16 5.25L8 9.75"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_7846">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
+            {orderData && (
+              <div className="OrderPlacedChat_section_one">
+                <div className="OrderPlacedChat_section_one_icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <g clip-path="url(#clip0_40000010_7846)">
+                      <path
+                        d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"
+                        stroke="#4A7D06"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M12 12L20 7.5"
+                        stroke="#4A7D06"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M12 12V21"
+                        stroke="#4A7D06"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M12 12L4 7.5"
+                        stroke="#4A7D06"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M16 5.25L8 9.75"
+                        stroke="#4A7D06"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_40000010_7846">
+                        <rect width="24" height="24" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+                <p className="OrderPlacedChat_section_one_topic">
+                  You placed the order
+                </p>
+                <p className="OrderPlacedChat_section_one_date">now</p>
               </div>
-              <p className="OrderPlacedChat_section_one_topic">
-                You placed the order
-              </p>
-              <p className="OrderPlacedChat_section_one_date">
-                Oct 02, 7:38 PM
-              </p>
-            </div>
+            )}
+
             <div className="OrderPlacedChat_section_two">
               <div className="order_line"></div>
               <svg
@@ -257,1266 +441,412 @@ function OrderPlacedChat() {
               <div className="order_line"></div>
             </div>
 
-            <div className="OrderPlacedChat_section_three chat_resivebox">
-              <p className="OrderPlacedChat_section_three_topic">
-                Please submit the requirements below to get the job started
+            {/* Show requirements section if requirements not submitted yet */}
+            {orderData && orderData.status === "Place order" && (
+              <div className="OrderPlacedChat_section_three chat_resivebox">
+                <p className="OrderPlacedChat_section_three_topic">
+                  Please submit the requirements below to get the job started
+                </p>
+                <div className="OrderPlacedChat_section_three_data">
+                  <p className="OrderPlacedChat_section_three_data_topic">
+                    <b>A.</b> Your target job title
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    (Place separate orders if you are targeting multiple
+                    industries)
+                  </p>
+                </div>
+                <div className="OrderPlacedChat_section_three_data">
+                  <p className="OrderPlacedChat_section_three_data_topic">
+                    <b>B.</b> Work experience
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    1. Company
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    2. Position
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    3. Period
+                  </p>
+                </div>
+                <div className="OrderPlacedChat_section_three_data">
+                  <p className="OrderPlacedChat_section_three_data_topic">
+                    <b>C.</b> Personal details
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    1. Address
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    2. Phone
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    3. Email
+                  </p>
+                </div>
+                <div className="OrderPlacedChat_section_three_data">
+                  <p className="OrderPlacedChat_section_three_data_topic">
+                    <b>D.</b> Education details
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    1. College/school/university
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    2. Course
+                  </p>
+                  <p className="OrderPlacedChat_section_three_data_pera">
+                    3. Year
+                  </p>
+                </div>
+                <div className="OrderPlacedChat_section_three_data">
+                  <p className="OrderPlacedChat_section_three_data_topic">
+                    <b>E.</b> Your current CV/Resume (If you have one)
+                  </p>
+                </div>
+                <p className="OrderPlacedChat_section_three_data_sub_topic">
+                  Copy this template to your clip board
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    {/* SVG content */}
+                  </svg>
+                </p>
+              </div>
+            )}
+
+            {/* Admin connected message */}
+            {orderData && orderData.admin_name && (
+              <p className="new_user_conect">
+                {orderData.admin_name} connected to the chat
               </p>
-              <div className="OrderPlacedChat_section_three_data">
-                <p className="OrderPlacedChat_section_three_data_topic">
-                  <b>A.</b> Your target job title
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  (Place separate orders if you are targeting multiple
-                  industries)
-                </p>
-              </div>
-              <div className="OrderPlacedChat_section_three_data">
-                <p className="OrderPlacedChat_section_three_data_topic">
-                  <b>B.</b> Work experience
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  1. Company
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  2. Position
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  3. Period
-                </p>
-              </div>
+            )}
 
-              <div className="OrderPlacedChat_section_three_data">
-                <p className="OrderPlacedChat_section_three_data_topic">
-                  <b>C.</b> Personal details
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  1. Address
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  2. Phone
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  3. Email
-                </p>
-              </div>
+            {messages.map((message, index) =>
+              message.sender_type === "admin" ? (
+                <div key={index} className="Receive_msg_con">
+                  <div className="chat_resivebox">
+                    <p className="resive_msg">{message.message}</p>
 
-              <div className="OrderPlacedChat_section_three_data">
-                <p className="OrderPlacedChat_section_three_data_topic">
-                  <b>D.</b> Education details
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  1. College/school/university
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  2. Course
-                </p>
-                <p className="OrderPlacedChat_section_three_data_pera">
-                  3. Year
-                </p>
-              </div>
-              <div className="OrderPlacedChat_section_three_data">
-                <p className="OrderPlacedChat_section_three_data_topic">
-                  <b>E.</b> Your current CV/Resume (If you have one)
-                </p>
-              </div>
-              <p className="OrderPlacedChat_section_three_data_sub_topic">
-                Copy this template to your clip board
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_40000010_7890)">
-                    <path
-                      d="M5.83301 8.056C5.83301 7.46655 6.06716 6.90125 6.48396 6.48445C6.90076 6.06765 7.46606 5.8335 8.05551 5.8335H15.2772C15.569 5.8335 15.858 5.89098 16.1277 6.00267C16.3973 6.11437 16.6423 6.27807 16.8487 6.48445C17.0551 6.69083 17.2188 6.93584 17.3305 7.20548C17.4422 7.47513 17.4997 7.76413 17.4997 8.056V15.2777C17.4997 15.5695 17.4422 15.8585 17.3305 16.1282C17.2188 16.3978 17.0551 16.6428 16.8487 16.8492C16.6423 17.0556 16.3973 17.2193 16.1277 17.331C15.858 17.4427 15.569 17.5002 15.2772 17.5002H8.05551C7.76365 17.5002 7.47464 17.4427 7.20499 17.331C6.93535 17.2193 6.69034 17.0556 6.48396 16.8492C6.27758 16.6428 6.11388 16.3978 6.00219 16.1282C5.89049 15.8585 5.83301 15.5695 5.83301 15.2777V8.056Z"
-                      stroke="#0D5438"
-                      stroke-width="1.66667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M3.34333 13.9475C3.08779 13.8018 2.87523 13.5912 2.72715 13.3371C2.57906 13.0829 2.50071 12.7942 2.5 12.5V4.16667C2.5 3.25 3.25 2.5 4.16667 2.5H12.5C13.125 2.5 13.465 2.82083 13.75 3.33333"
-                      stroke="#0D5438"
-                      stroke-width="1.66667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_7890">
-                      <rect width="20" height="20" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </p>
-            </div>
-            
-            <p className="new_user_conect">Samantha connected to the chat</p>
-            {/*Receive msg */}
-            <div className="Receive_msg_con">
-              <div className="chat_resivebox">
-                <p className="resive_msg">
-                  Thank you for choosing Resume Mansion! We’ve received your
-                  order and are currently reviewing the details. If you have any
-                  questions or need further assistance, please don’t hesitate to
-                  reach out. We’re here to help you every step of the way!
-                  Looking forward to working with you!
-                </p>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Samantha Harris</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/*Send msg */}
-            <div className="send_msg_con">
-              <div className="send_msg_box">
-                <p className="resive_msg">
-                  Hi Resume Mansion, I’ve got couple of CVs, is it okay to
-                  upload all of them?
-                </p>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card_chat">
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">You</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                  <div className="sender_pro_icon">YP</div>
-                </div>
-              </div>
-            </div>
-            {/*Receive msg */}
-            <div className="Receive_msg_con">
-              <div className="chat_resivebox">
-                <p className="resive_msg">Sure Yasintha, No problem.</p>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Samantha Harris</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/*Send msg */}
-            <div className="send_msg_con">
-              <div className="send_msg_box">
-                <p className="resive_msg">
-                  <b>A. Your target job title:</b>UX lead
-                </p>
-                <br />
-                <p className="resive_msg">
-                  <b>B. Work experience</b>
-                </p>
-                <br />
-                <p className="resive_msg">1. Company : Microsfot</p>
-                <p className="resive_msg">2. Position: UX Designer</p>
-                <p className="resive_msg">3. Period: 2017-2024 </p>
-                <br />
-                <p className="resive_msg">
-                  <b>C. Personal details</b>
-                </p>
-                <br />
-                <p className="resive_msg">Address: That road, this house</p>
-                <p className="resive_msg">Phone: (555) 787878</p>
-                <p className="resive_msg">Email: bestofyasi@gmail.com</p>
-                <br />
-                <p className="resive_msg">
-                  <b>D. Education details</b>
-                </p>
-                <br />
-                <p className="resive_msg">College/school/university: SLIIT</p>
-                <p className="resive_msg">Course: IT</p>
-                <p className="resive_msg">Year: 2013</p>
-              </div>
-              <div className="cv_send">
-                <div className="send_box_cv">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <g clip-path="url(#clip0_283_24471)">
-                      <path
-                        d="M15.0007 7.00045L8.50068 13.5005C8.10286 13.8983 7.87936 14.4378 7.87936 15.0005C7.87936 15.5631 8.10286 16.1026 8.50068 16.5005C8.8985 16.8983 9.43807 17.1218 10.0007 17.1218C10.5633 17.1218 11.1029 16.8983 11.5007 16.5005L18.0007 10.0005C18.7963 9.2048 19.2433 8.12567 19.2433 7.00045C19.2433 5.87523 18.7963 4.7961 18.0007 4.00045C17.205 3.2048 16.1259 2.75781 15.0007 2.75781C13.8755 2.75781 12.7963 3.2048 12.0007 4.00045L5.50068 10.5005C4.30721 11.6939 3.63672 13.3126 3.63672 15.0005C3.63672 16.6883 4.30721 18.307 5.50068 19.5005C6.69415 20.6939 8.31285 21.3644 10.0007 21.3644C11.6885 21.3644 13.3072 20.6939 14.5007 19.5005L21.0007 13.0005"
-                        stroke="#051D14"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_283_24471">
-                        <rect width="24" height="24" fill="white" />
-                      </clipPath>
-                    </defs>
-                  </svg>
-                  <p className="cv_name">my cv 2015.pdf</p>
-                </div>
-                <div className="send_box_cv">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <g clip-path="url(#clip0_283_24471)">
-                      <path
-                        d="M15.0007 7.00045L8.50068 13.5005C8.10286 13.8983 7.87936 14.4378 7.87936 15.0005C7.87936 15.5631 8.10286 16.1026 8.50068 16.5005C8.8985 16.8983 9.43807 17.1218 10.0007 17.1218C10.5633 17.1218 11.1029 16.8983 11.5007 16.5005L18.0007 10.0005C18.7963 9.2048 19.2433 8.12567 19.2433 7.00045C19.2433 5.87523 18.7963 4.7961 18.0007 4.00045C17.205 3.2048 16.1259 2.75781 15.0007 2.75781C13.8755 2.75781 12.7963 3.2048 12.0007 4.00045L5.50068 10.5005C4.30721 11.6939 3.63672 13.3126 3.63672 15.0005C3.63672 16.6883 4.30721 18.307 5.50068 19.5005C6.69415 20.6939 8.31285 21.3644 10.0007 21.3644C11.6885 21.3644 13.3072 20.6939 14.5007 19.5005L21.0007 13.0005"
-                        stroke="#051D14"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_283_24471">
-                        <rect width="24" height="24" fill="white" />
-                      </clipPath>
-                    </defs>
-                  </svg>
-                  <p className="cv_name">my cv 2013.pdf</p>
-                </div>
-                <div className="send_box_cv">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <g clip-path="url(#clip0_283_24471)">
-                      <path
-                        d="M15.0007 7.00045L8.50068 13.5005C8.10286 13.8983 7.87936 14.4378 7.87936 15.0005C7.87936 15.5631 8.10286 16.1026 8.50068 16.5005C8.8985 16.8983 9.43807 17.1218 10.0007 17.1218C10.5633 17.1218 11.1029 16.8983 11.5007 16.5005L18.0007 10.0005C18.7963 9.2048 19.2433 8.12567 19.2433 7.00045C19.2433 5.87523 18.7963 4.7961 18.0007 4.00045C17.205 3.2048 16.1259 2.75781 15.0007 2.75781C13.8755 2.75781 12.7963 3.2048 12.0007 4.00045L5.50068 10.5005C4.30721 11.6939 3.63672 13.3126 3.63672 15.0005C3.63672 16.6883 4.30721 18.307 5.50068 19.5005C6.69415 20.6939 8.31285 21.3644 10.0007 21.3644C11.6885 21.3644 13.3072 20.6939 14.5007 19.5005L21.0007 13.0005"
-                        stroke="#051D14"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_283_24471">
-                        <rect width="24" height="24" fill="white" />
-                      </clipPath>
-                    </defs>
-                  </svg>
-                  <p className="cv_name">my cv 2020.pdf</p>
-                </div>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card_chat">
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">You</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                  <div className="sender_pro_icon">YP</div>
-                </div>
-              </div>
-            </div>
-            {/*Receive msg */}
-            <div className="Receive_msg_con">
-              <div className="chat_resivebox">
-                <p className="resive_msg">
-                  Please tell us your preferred template for your resume. We
-                  recommend options A and B for the best impact!
-                </p>
-              </div>
-              <div className="chat_resivebox">
-                <div className="cv_template_con">
-                  <div
-                    className="cv_template_boxone"
-                    style={getBackgroundImage(0)}
-                    onClick={() => openModal(0)}
-                  >
-                    <p className="cv_template_box_num">A</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                  <div
-                    className="cv_template_boxtwo"
-                    style={getBackgroundImage(1)}
-                    onClick={() => openModal(1)}
-                  >
-                    <p className="cv_template_box_num">B</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                  <div
-                    className="cv_template_boxthree"
-                    style={getBackgroundImage(2)}
-                    onClick={() => openModal(2)}
-                  >
-                    <p className="cv_template_box_num">C</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-
-                  {isModalOpen && (
-                    <div className="main_model_con_cv">
-                      <div className="modal-overlay_close" onClick={closeModal}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                        >
-                          <g clip-path="url(#clip0_331_34992)">
-                            <path
-                              d="M24 8L8 24"
-                              stroke="black"
-                              stroke-width="2.66667"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                            <path
-                              d="M8 8L24 24"
-                              stroke="black"
-                              stroke-width="2.66667"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_331_34992">
-                              <rect width="32" height="32" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </div>
-                      <div className="modal_chat_bot">
-                        <p className="template_name_cv">
-                          {images[currentImageIndex].name}
-                        </p>
-                        <div className="modal_sub">
-                          <div className="modal-content">
-                            <button
-                              className="chat_model_arrow left_arrow_chat norml_type_chat_btn"
-                              onClick={() => navigateImage("prev")}
+                    {/* Show attachments if any */}
+                    {message.attachments &&
+                      message.attachments.length > 0 &&
+                      message.attachments.map((attachment, idx) => (
+                        <div key={idx} className="doc_card_cv">
+                          <div className="doc_name_card_type">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="23"
+                              height="24"
+                              viewBox="0 0 23 24"
+                              fill="none"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="30"
-                                height="30"
-                                viewBox="0 0 30 30"
-                                fill="none"
-                              >
-                                <mask
-                                  id="mask0_331_34978"
-                                  maskUnits="userSpaceOnUse"
-                                  x="0"
-                                  y="0"
-                                  width="30"
-                                  height="30"
-                                >
-                                  <path d="M0 30H30V0H0V30Z" fill="white" />
-                                </mask>
-                                <g mask="url(#mask0_331_34978)">
-                                  <path
-                                    d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
-                                    fill="white"
-                                  />
-                                </g>
-                              </svg>
-                            </button>
-
-                            <img
-                              src={images[currentImageIndex].src}
-                              alt="Modal"
-                              className="model_image_chat"
-                            />
-
-                            <button
-                              className="chat_model_arrow right_arrow_chat norml_type_chat_btn"
-                              onClick={() => navigateImage("next")}
+                              {/* File icon SVG */}
+                            </svg>
+                          </div>
+                          <p className="doc_name_card">
+                            {attachment.file_name}
+                          </p>
+                          <div className="doc_name_card_dwon">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="30"
-                                height="30"
-                                viewBox="0 0 30 30"
-                                fill="none"
-                              >
-                                <mask
-                                  id="mask0_331_34985"
-                                  maskUnits="userSpaceOnUse"
-                                  x="0"
-                                  y="0"
-                                  width="30"
-                                  height="30"
-                                >
-                                  <path d="M30 30H0V0H30V30Z" fill="white" />
-                                </mask>
-                                <g mask="url(#mask0_331_34985)">
-                                  <path
-                                    d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
-                                    fill="white"
-                                  />
-                                </g>
-                              </svg>
-                            </button>
+                              {/* Download icon SVG */}
+                            </svg>
                           </div>
                         </div>
-                        <div className="res_type_chat_btn">
-                          <button
-                            className="chat_model_arrow_res left_arrow_chat_res"
-                            onClick={() => navigateImage("prev")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 30 30"
-                              fill="none"
-                            >
-                              <mask
-                                id="mask0_331_34978"
-                                maskUnits="userSpaceOnUse"
-                                x="0"
-                                y="0"
-                                width="30"
-                                height="30"
-                              >
-                                <path d="M0 30H30V0H0V30Z" fill="white" />
-                              </mask>
-                              <g mask="url(#mask0_331_34978)">
-                                <path
-                                  d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
-                                  fill="white"
-                                />
-                              </g>
-                            </svg>
-                          </button>
-                          <button
-                            className="chat_model_arrow_res right_arrow_chat_res"
-                            onClick={() => navigateImage("next")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 30 30"
-                              fill="none"
-                            >
-                              <mask
-                                id="mask0_331_34985"
-                                maskUnits="userSpaceOnUse"
-                                x="0"
-                                y="0"
-                                width="30"
-                                height="30"
-                              >
-                                <path d="M30 30H0V0H30V30Z" fill="white" />
-                              </mask>
-                              <g mask="url(#mask0_331_34985)">
-                                <path
-                                  d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
-                                  fill="white"
-                                />
-                              </g>
-                            </svg>
-                          </button>
-                        </div>
-                        <button
-                          onClick={() =>
-                            (window.location.href = "/currentOrder")
-                          }
-                          className="back_chat_btn"
-                        >
-                          Back to chat
-                        </button>
+                      ))}
+                  </div>
+                  <div className="sender_box">
+                    <div className="auther_continer_blog_card">
+                      <img
+                        src={Avatar}
+                        alt="avatar_image"
+                        className="avatar_card_blog"
+                      />
+                      <div className="auther_data_set">
+                        <p className="avatar_name_blog">
+                          {message.sender_name ||
+                            orderData.admin_name ||
+                            "Team Member"}
+                        </p>
+                        <p className="avatar_date">
+                          {formatDate(message.created_at)}
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Samantha Harris</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
                   </div>
                 </div>
-              </div>
-            </div>
-            {/*Send msg */}
-            <div className="send_msg_con">
-              <div className="send_msg_box">
-                <p className="resive_msg">I like A</p>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card_chat">
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">You</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
+              ) : (
+                <div key={index} className="send_msg_con">
+                  <div className="send_msg_box">
+                    <p className="resive_msg">{message.message}</p>
                   </div>
-                  <div className="sender_pro_icon">YP</div>
-                </div>
-              </div>
-            </div>
-            {/*Receive msg */}
-            <div className="Receive_msg_con">
-              <div className="chat_resivebox">
-                <p className="resive_msg">
-                  Thanks for sending over the details! We’ve received everything
-                  and are now working on crafting your document. Our team is
-                  dedicated to ensuring every aspect aligns perfectly with your
-                  goals. We’ll keep you posted on the progress, but feel free to
-                  reach out if you have any questions in the meantime!
-                </p>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Samantha Harris</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/*Order Status (You submitted the requirements)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_edit">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_40000010_7999)">
-                    <path
-                      d="M4 19.9998H8L18.5 9.49981C18.7626 9.23717 18.971 8.92537 19.1131 8.58221C19.2553 8.23905 19.3284 7.87125 19.3284 7.49981C19.3284 7.12838 19.2553 6.76058 19.1131 6.41742C18.971 6.07426 18.7626 5.76246 18.5 5.49981C18.2374 5.23717 17.9256 5.02883 17.5824 4.88669C17.2392 4.74455 16.8714 4.67139 16.5 4.67139C16.1286 4.67139 15.7608 4.74455 15.4176 4.88669C15.0744 5.02883 14.7626 5.23717 14.5 5.49981L4 15.9998V19.9998Z"
-                      stroke="#1760B2"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M13.5 6.5L17.5 10.5"
-                      stroke="#1760B2"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_7999">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">
-                You submitted the requirements
-              </p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
-            {/*Order Status (Your order started)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_40000010_8008)">
-                    <path
-                      d="M4 13C5.78309 13.2119 7.44305 14.0175 8.71276 15.2872C9.98247 16.557 10.7881 18.2169 11 20C11.8839 19.4904 12.6233 18.7638 13.1482 17.8889C13.6732 17.014 13.9663 16.0197 14 15C15.6791 14.4093 17.1454 13.334 18.2133 11.91C19.2813 10.486 19.9031 8.77734 20 7C20 6.20435 19.6839 5.44129 19.1213 4.87868C18.5587 4.31607 17.7956 4 17 4C15.2227 4.09691 13.514 4.71867 12.09 5.78665C10.666 6.85464 9.59069 8.32089 9 10C7.98026 10.0337 6.98596 10.3268 6.11106 10.8518C5.23617 11.3767 4.50959 12.1161 4 13Z"
-                      stroke="#C415B5"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M7.00048 14C5.95971 14.5876 5.11814 15.4726 4.58364 16.5416C4.04914 17.6106 3.84608 18.8148 4.00048 20C5.18564 20.1544 6.38991 19.9513 7.4589 19.4168C8.5279 18.8823 9.41291 18.0408 10.0005 17"
-                      stroke="#C415B5"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M14 9C14 9.26522 14.1054 9.51957 14.2929 9.70711C14.4804 9.89464 14.7348 10 15 10C15.2652 10 15.5196 9.89464 15.7071 9.70711C15.8946 9.51957 16 9.26522 16 9C16 8.73478 15.8946 8.48043 15.7071 8.29289C15.5196 8.10536 15.2652 8 15 8C14.7348 8 14.4804 8.10536 14.2929 8.29289C14.1054 8.48043 14 8.73478 14 9Z"
-                      stroke="#C415B5"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_8008">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">Your order started</p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
-            {/*Order Status (You placed the order)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_plase">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_208_18434)">
-                    <path
-                      d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12L20 7.5"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12V21"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12L4 7.5"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M16 5.25L8 9.75"
-                      stroke="#4A7D06"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_208_18434">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">You placed the order</p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
-            {/*Order Status (Your Order delivered)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_delivered">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_208_18613)">
-                    <path
-                      d="M5 17C5 17.5304 5.21071 18.0391 5.58579 18.4142C5.96086 18.7893 6.46957 19 7 19C7.53043 19 8.03914 18.7893 8.41421 18.4142C8.78929 18.0391 9 17.5304 9 17C9 16.4696 8.78929 15.9609 8.41421 15.5858C8.03914 15.2107 7.53043 15 7 15C6.46957 15 5.96086 15.2107 5.58579 15.5858C5.21071 15.9609 5 16.4696 5 17Z"
-                      stroke="#063B26"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M15 17C15 17.5304 15.2107 18.0391 15.5858 18.4142C15.9609 18.7893 16.4696 19 17 19C17.5304 19 18.0391 18.7893 18.4142 18.4142C18.7893 18.0391 19 17.5304 19 17C19 16.4696 18.7893 15.9609 18.4142 15.5858C18.0391 15.2107 17.5304 15 17 15C16.4696 15 15.9609 15.2107 15.5858 15.5858C15.2107 15.9609 15 16.4696 15 17Z"
-                      stroke="#063B26"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M5 17H3V13M2 5H13V17M9 17H15M19 17H21V11M21 11H13M21 11L18 6H13"
-                      stroke="#063B26"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M3 9H7"
-                      stroke="#063B26"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_208_18613">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">Your Order delivered</p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
-            {/*Order Status (You requested revision)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_revision">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_208_18638)">
-                    <path
-                      d="M15.0001 4.54997C14.0217 4.15601 12.9754 3.9586 11.9207 3.96902C10.8661 3.97944 9.82384 4.19749 8.85347 4.61071C7.8831 5.02393 7.00362 5.62423 6.26524 6.37734C5.52687 7.13045 4.94406 8.02162 4.5501 8.99997C3.75445 10.9758 3.77629 13.1868 4.61083 15.1466C5.44537 17.1064 7.02423 18.6543 9.00009 19.45M9.00009 15V20H4.00009"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M18.3701 7.15997V7.16997"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M13 19.94V19.95"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M16.8398 18.37V18.38"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M19.3701 15.1V15.11"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M19.9404 11V11.01"
-                      stroke="#B03200"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_208_18638">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">You requested revision</p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
-            {/*Order Status (Your delivery date was updated to October 6)*/}
-            <div className="order_status_card">
-              <div className="order_status_card_icon_update">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_208_18660)">
-                    <path
-                      d="M3 12C3 13.1819 3.23279 14.3522 3.68508 15.4442C4.13738 16.5361 4.80031 17.5282 5.63604 18.364C6.47177 19.1997 7.46392 19.8626 8.55585 20.3149C9.64778 20.7672 10.8181 21 12 21C13.1819 21 14.3522 20.7672 15.4442 20.3149C16.5361 19.8626 17.5282 19.1997 18.364 18.364C19.1997 17.5282 19.8626 16.5361 20.3149 15.4442C20.7672 14.3522 21 13.1819 21 12C21 10.8181 20.7672 9.64778 20.3149 8.55585C19.8626 7.46392 19.1997 6.47177 18.364 5.63604C17.5282 4.80031 16.5361 4.13738 15.4442 3.68508C14.3522 3.23279 13.1819 3 12 3C10.8181 3 9.64778 3.23279 8.55585 3.68508C7.46392 4.13738 6.47177 4.80031 5.63604 5.63604C4.80031 6.47177 4.13738 7.46392 3.68508 8.55585C3.23279 9.64778 3 10.8181 3 12Z"
-                      stroke="#54009A"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 12L10 15"
-                      stroke="#54009A"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 7V12"
-                      stroke="#54009A"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_208_18660">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <p className="order_status_card_title">
-                Your delivery date was updated to October 6
-              </p>
-              <p className="order_status_card_date">Oct 02, 7:38 PM</p>
-            </div>
 
-            <div className="Receive_msg_con">
-              {/*Receive msg PDF*/}
-              <div className="chat_resivebox">
-                <div className="doc_card_cv">
-                  <div className="doc_name_card_type">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="23"
-                      height="24"
-                      viewBox="0 0 23 24"
-                      fill="none"
-                    >
-                      <g clip-path="url(#clip0_283_24504)">
-                        <path
-                          d="M13.416 3V7C13.416 7.26522 13.517 7.51957 13.6967 7.70711C13.8764 7.89464 14.1202 8 14.3743 8H18.2077"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M4.79102 12V5C4.79102 4.46957 4.99295 3.96086 5.35239 3.58579C5.71184 3.21071 6.19935 3 6.70768 3H13.416L18.2077 8V12"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M4.79102 18H6.22852C6.60976 18 6.9754 17.842 7.24498 17.5607C7.51457 17.2794 7.66602 16.8978 7.66602 16.5C7.66602 16.1022 7.51457 15.7206 7.24498 15.4393C6.9754 15.158 6.60976 15 6.22852 15H4.79102V21"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M16.291 18H18.2077"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M19.166 15H16.291V21"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M10.541 15V21H11.4993C12.0077 21 12.4952 20.7893 12.8546 20.4142C13.2141 20.0391 13.416 19.5304 13.416 19V17C13.416 16.4696 13.2141 15.9609 12.8546 15.5858C12.4952 15.2107 12.0077 15 11.4993 15H10.541Z"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_283_24504">
-                          <rect width="23" height="24" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </div>
-                  <p className="doc_name_card">yasintha_resume.pdf</p>
-                  <div className="doc_name_card_dwon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                    >
-                      <g clip-path="url(#clip0_40000010_2744)">
-                        <path
-                          d="M6.66602 10.0003L9.99935 13.3337M9.99935 13.3337L13.3327 10.0003M9.99935 13.3337V6.66699M18.3327 10.0003C18.3327 14.6027 14.6017 18.3337 9.99935 18.3337C5.39698 18.3337 1.66602 14.6027 1.66602 10.0003C1.66602 5.39795 5.39698 1.66699 9.99935 1.66699C14.6017 1.66699 18.3327 5.39795 18.3327 10.0003Z"
-                          stroke="#063B26"
-                          stroke-width="1.66667"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_40000010_2744">
-                          <rect width="20" height="20" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
+                  {/* Show attachments if any */}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="cv_send">
+                      {message.attachments.map((attachment, idx) => (
+                        <div key={idx} className="send_box_cv">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            {/* Attachment icon SVG */}
+                          </svg>
+                          <p className="cv_name">{attachment.file_name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="sender_box">
+                    <div className="auther_continer_blog_card_chat">
+                      <div className="auther_data_set">
+                        <p className="avatar_name_blog">You</p>
+                        <p className="avatar_date">
+                          {formatDate(message.created_at)}
+                        </p>
+                      </div>
+                      <div className="sender_pro_icon">U</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              {/*Receive msg Doc*/}
-              <div className="chat_resivebox">
-                <div className="doc_card_cv">
-                  <div className="doc_name_card_type">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
+              )
+            )}
+
+            {/* Order Status Cards based on API status */}
+            {orderData && (
+              <>
+                {hasReachedStatus("Requirements submitted") && (
+                  <div className="order_status_card">
+                    <div className="order_status_card_icon_edit">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        {/* SVG for requirements submitted */}
+                      </svg>
+                    </div>
+                    <p className="order_status_card_title">
+                      You submitted the requirements
+                    </p>
+                    <p className="order_status_card_date">
+                      {formatDate(orderData.requirements_submitted_at)}
+                    </p>
+                  </div>
+                )}
+
+                {/* In progress */}
+                {hasReachedStatus("In progress") && (
+                  <div className="order_status_card">
+                    <div className="order_status_card_icon_start">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        {/* SVG for in progress */}
+                      </svg>
+                    </div>
+                    <p className="order_status_card_title">
+                      Your order started
+                    </p>
+                    <p className="order_status_card_date">
+                      {formatDate(orderData.started_at)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Delivered */}
+                {hasReachedStatus("Delivered") && (
+                  <div className="order_status_card">
+                    <div className="order_status_card_icon_delivered">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        {/* SVG for delivered */}
+                      </svg>
+                    </div>
+                    <p className="order_status_card_title">
+                      Your Order delivered
+                    </p>
+                    <p className="order_status_card_date">
+                      {formatDate(orderData.delivered_at)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Revision requested */}
+                {orderData.revision_requested_at && (
+                  <div className="order_status_card">
+                    <div className="order_status_card_icon_revision">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        {/* SVG for revision */}
+                      </svg>
+                    </div>
+                    <p className="order_status_card_title">
+                      You requested revision
+                    </p>
+                    <p className="order_status_card_date">
+                      {formatDate(orderData.revision_requested_at)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Delivery date updated */}
+                {orderData.delivery_date_updated && (
+                  <div className="order_status_card">
+                    <div className="order_status_card_icon_update">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        {/* SVG for date update */}
+                      </svg>
+                    </div>
+                    <p className="order_status_card_title">
+                      Your delivery date was updated to{" "}
+                      {new Date(orderData.new_delivery_date).toLocaleDateString(
+                        "en-US",
+                        { month: "long", day: "numeric" }
+                      )}
+                    </p>
+                    <p className="order_status_card_date">
+                      {formatDate(orderData.delivery_date_updated)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Add Order Again button after Delivered status */}
+                {hasReachedStatus("Delivered") && (
+                  <div className="order_again_container">
+                    <button
+                      className="order_again_btn"
+                      onClick={handleOrderAgain}
                     >
-                      <g clip-path="url(#clip0_283_24515)">
-                        <path
-                          d="M14 3V7C14 7.26522 14.1054 7.51957 14.2929 7.70711C14.4804 7.89464 14.7348 8 15 8H19"
-                          stroke="#2168E3"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M5 12V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H14L19 8V12"
-                          stroke="#2168E3"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M5 15V21H6C6.53043 21 7.03914 20.7893 7.41421 20.4142C7.78929 20.0391 8 19.5304 8 19V17C8 16.4696 7.78929 15.9609 7.41421 15.5858C7.03914 15.2107 6.53043 15 6 15H5Z"
-                          stroke="#2168E3"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M20 16.5C20 16.1022 19.842 15.7206 19.5607 15.4393C19.2794 15.158 18.8978 15 18.5 15C18.1022 15 17.7206 15.158 17.4393 15.4393C17.158 15.7206 17 16.1022 17 16.5V19.5C17 19.8978 17.158 20.2794 17.4393 20.5607C17.7206 20.842 18.1022 21 18.5 21C18.8978 21 19.2794 20.842 19.5607 20.5607C19.842 20.2794 20 19.8978 20 19.5"
-                          stroke="#2168E3"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M12.5 15C12.8978 15 13.2794 15.158 13.5607 15.4393C13.842 15.7206 14 16.1022 14 16.5V19.5C14 19.8978 13.842 20.2794 13.5607 20.5607C13.2794 20.842 12.8978 21 12.5 21C12.1022 21 11.7206 20.842 11.4393 20.5607C11.158 20.2794 11 19.8978 11 19.5V16.5C11 16.1022 11.158 15.7206 11.4393 15.4393C11.7206 15.158 12.1022 15 12.5 15Z"
-                          stroke="#2168E3"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_283_24515">
-                          <rect width="24" height="24" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
+                      Order Again
+                    </button>
                   </div>
-                  <p className="doc_name_card">yasintha_resume.doc</p>
-                  <div className="doc_name_card_dwon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                    >
-                      <g clip-path="url(#clip0_40000010_2744)">
-                        <path
-                          d="M6.66602 10.0003L9.99935 13.3337M9.99935 13.3337L13.3327 10.0003M9.99935 13.3337V6.66699M18.3327 10.0003C18.3327 14.6027 14.6017 18.3337 9.99935 18.3337C5.39698 18.3337 1.66602 14.6027 1.66602 10.0003C1.66602 5.39795 5.39698 1.66699 9.99935 1.66699C14.6017 1.66699 18.3327 5.39795 18.3327 10.0003Z"
-                          stroke="#063B26"
-                          stroke-width="1.66667"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_40000010_2744">
-                          <rect width="20" height="20" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              {/*Receive msg Zip*/}
-              <div className="chat_resivebox">
-                <div className="doc_card_cv">
-                  <div className="doc_name_card_type">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="23"
-                      height="24"
-                      viewBox="0 0 23 24"
-                      fill="none"
-                    >
-                      <g clip-path="url(#clip0_283_24504)">
-                        <path
-                          d="M13.416 3V7C13.416 7.26522 13.517 7.51957 13.6967 7.70711C13.8764 7.89464 14.1202 8 14.3743 8H18.2077"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M4.79102 12V5C4.79102 4.46957 4.99295 3.96086 5.35239 3.58579C5.71184 3.21071 6.19935 3 6.70768 3H13.416L18.2077 8V12"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M4.79102 18H6.22852C6.60976 18 6.9754 17.842 7.24498 17.5607C7.51457 17.2794 7.66602 16.8978 7.66602 16.5C7.66602 16.1022 7.51457 15.7206 7.24498 15.4393C6.9754 15.158 6.60976 15 6.22852 15H4.79102V21"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M16.291 18H18.2077"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M19.166 15H16.291V21"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M10.541 15V21H11.4993C12.0077 21 12.4952 20.7893 12.8546 20.4142C13.2141 20.0391 13.416 19.5304 13.416 19V17C13.416 16.4696 13.2141 15.9609 12.8546 15.5858C12.4952 15.2107 12.0077 15 11.4993 15H10.541Z"
-                          stroke="#D71D1D"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_283_24504">
-                          <rect width="23" height="24" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </div>
-                  <p className="doc_name_card">yasintha_resume.pdf</p>
-                  <div className="doc_name_card_dwon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                    >
-                      <g clip-path="url(#clip0_40000010_2744)">
-                        <path
-                          d="M6.66602 10.0003L9.99935 13.3337M9.99935 13.3337L13.3327 10.0003M9.99935 13.3337V6.66699M18.3327 10.0003C18.3327 14.6027 14.6017 18.3337 9.99935 18.3337C5.39698 18.3337 1.66602 14.6027 1.66602 10.0003C1.66602 5.39795 5.39698 1.66699 9.99935 1.66699C14.6017 1.66699 18.3327 5.39795 18.3327 10.0003Z"
-                          stroke="#063B26"
-                          stroke-width="1.66667"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_40000010_2744">
-                          <rect width="20" height="20" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Samantha Harris</p>
-                    <p className="avatar_date">Oct 02, 7:38 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        {/*chat area */}
+        {/* Chat input area */}
         <div className="chat_area">
           <textarea
             className="chat_box"
-            rows={10}
-            placeholder="Send mesage.."
+            rows={
+              selectedFiles.length > 0
+                ? Math.max(4, 10 - selectedFiles.length)
+                : 10
+            }
+            placeholder={
+              hasFiles
+                ? "Files selected. Clear files to type a message."
+                : "Send message..."
+            }
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            disabled={hasFiles}
           />
+
+          {/* Show selected files preview */}
+          {selectedFiles.length > 0 && (
+            <div className="selected_files_container">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="selected_file">
+                  <div className="file_info">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M8.66667 1.33334H4C3.64638 1.33334 3.30724 1.47382 3.05719 1.72387C2.80714 1.97392 2.66667 2.31305 2.66667 2.66667V13.3333C2.66667 13.687 2.80714 14.0261 3.05719 14.2762C3.30724 14.5262 3.64638 14.6667 4 14.6667H12C12.3536 14.6667 12.6928 14.5262 12.9428 14.2762C13.1929 14.0261 13.3333 13.687 13.3333 13.3333V6.00001L8.66667 1.33334Z"
+                        stroke="#051D14"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M8.66667 1.33334V6.00001H13.3333"
+                        stroke="#051D14"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="file_name">
+                      {file.name.length > 25
+                        ? file.name.substring(0, 23) + "..."
+                        : file.name}
+                    </span>
+                    <span className="file_size">
+                      ({(file.size / 1024).toFixed(1)} KB)
+                    </span>
+                  </div>
+                  <button
+                    className="remove_file"
+                    onClick={() => removeFile(index)}
+                    type="button"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M12 4L4 12"
+                        stroke="#051D14"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M4 4L12 12"
+                        stroke="#051D14"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="chat_area_action_con">
             <div className="chat_area_action_con_left">
               <div>
@@ -1565,68 +895,282 @@ function OrderPlacedChat() {
                 </svg>
               </div>
               <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
+                {/* Add file input for attachments */}
+                <label
+                  htmlFor="file-upload"
+                  className={`file-upload-label ${
+                    hasTextMessage ? "disabled-upload" : ""
+                  }`}
+                  style={{
+                    opacity: hasTextMessage ? 0.5 : 1,
+                    cursor: hasTextMessage ? "not-allowed" : "pointer",
+                  }}
                 >
-                  <g clip-path="url(#clip0_40000010_8231)">
-                    <path
-                      d="M14.9997 6.99996L8.4997 13.5C8.10188 13.8978 7.87838 14.4374 7.87838 15C7.87838 15.5626 8.10188 16.1021 8.4997 16.5C8.89753 16.8978 9.43709 17.1213 9.9997 17.1213C10.5623 17.1213 11.1019 16.8978 11.4997 16.5L17.9997 9.99996C18.7954 9.20432 19.2423 8.12518 19.2423 6.99996C19.2423 5.87475 18.7954 4.79561 17.9997 3.99996C17.2041 3.20432 16.1249 2.75732 14.9997 2.75732C13.8745 2.75732 12.7954 3.20432 11.9997 3.99996L5.4997 10.5C4.30623 11.6934 3.63574 13.3121 3.63574 15C3.63574 16.6878 4.30623 18.3065 5.4997 19.5C6.69318 20.6934 8.31188 21.3639 9.9997 21.3639C11.6875 21.3639 13.3062 20.6934 14.4997 19.5L20.9997 13"
-                      stroke="#051D14"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_8231">
-                      <rect width="24" height="24" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <g clip-path="url(#clip0_40000010_8231)">
+                      <path
+                        d="M14.9997 6.99996L8.4997 13.5C8.10188 13.8978 7.87838 14.4374 7.87838 15C7.87838 15.5626 8.10188 16.1021 8.4997 16.5C8.89753 16.8978 9.43709 17.1213 9.9997 17.1213C10.5623 17.1213 11.1019 16.8978 11.4997 16.5L17.9997 9.99996C18.7954 9.20432 19.2423 8.12518 19.2423 6.99996C19.2423 5.87475 18.7954 4.79561 17.9997 3.99996C17.2041 3.20432 16.1249 2.75732 14.9997 2.75732C13.8745 2.75732 12.7954 3.20432 11.9997 3.99996L5.4997 10.5C4.30623 11.6934 3.63574 13.3121 3.63574 15C3.63574 16.6878 4.30623 18.3065 5.4997 19.5C6.69318 20.6934 8.31188 21.3639 9.9997 21.3639C11.6875 21.3639 13.3062 20.6934 14.4997 19.5L20.9997 13"
+                        stroke="#051D14"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_40000010_8231">
+                        <rect width="24" height="24" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  accept="application/pdf"
+                  onChange={hasTextMessage ? null : handleFileSelect}
+                  disabled={hasTextMessage}
+                  style={{ display: "none" }}
+                />
               </div>
             </div>
 
             <div className="chat_area_action_con_roght">
-              <button className="chat_area_action_con_roght_btn">
-                Send
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <g clip-path="url(#clip0_40000010_8239)">
-                    <path
-                      d="M8.33301 11.6667L17.4997 2.5"
-                      stroke="black"
-                      stroke-width="1.66667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M17.4998 2.5L12.0831 17.5C12.0466 17.5798 11.9879 17.6474 11.914 17.6948C11.8402 17.7422 11.7542 17.7674 11.6665 17.7674C11.5787 17.7674 11.4928 17.7422 11.4189 17.6948C11.3451 17.6474 11.2864 17.5798 11.2498 17.5L8.33315 11.6667L2.49981 8.75C2.42003 8.71344 2.35242 8.65474 2.30502 8.58088C2.25762 8.50701 2.23242 8.4211 2.23242 8.33333C2.23242 8.24557 2.25762 8.15965 2.30502 8.08579C2.35242 8.01193 2.42003 7.95323 2.49981 7.91667L17.4998 2.5Z"
-                      stroke="black"
-                      stroke-width="1.66667"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_40000010_8239">
-                      <rect width="20" height="20" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
+              <button
+                className="chat_area_action_con_roght_btn"
+                onClick={handleSendMessage}
+                disabled={
+                  (!messageText.trim() && selectedFiles.length === 0) ||
+                  !orderData ||
+                  sendingMessage
+                }
+              >
+                {sendingMessage ? (
+                  <div className="send_loading">
+                    <div className="send_loading_spinner"></div>
+                    <span>Sending...</span>
+                  </div>
+                ) : (
+                  <>
+                    Send
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      {/* Existing send icon */}
+                      <g clip-path="url(#clip0_40000010_8239)">
+                        <path
+                          d="M8.33301 11.6667L17.4997 2.5"
+                          stroke="black"
+                          stroke-width="1.66667"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M17.4998 2.5L12.0831 17.5C12.0466 17.5798 11.9879 17.6474 11.914 17.6948C11.8402 17.7422 11.7542 17.7674 11.6665 17.7674C11.5787 17.7674 11.4928 17.7422 11.4189 17.6948C11.3451 17.6474 11.2864 17.5798 11.2498 17.5L8.33315 11.6667L2.49981 8.75C2.42003 8.71344 2.35242 8.65474 2.30502 8.58088C2.25762 8.50701 2.23242 8.4211 2.23242 8.33333C2.23242 8.24557 2.25762 8.15965 2.30502 8.08579C2.35242 8.01193 2.42003 7.95323 2.49981 7.91667L17.4998 2.5Z"
+                          stroke="black"
+                          stroke-width="1.66667"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_40000010_8239">
+                          <rect width="20" height="20" fill="white" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal for viewing templates */}
+      {isModalOpen && (
+        <div className="main_model_con_cv">
+          <div className="modal-overlay_close" onClick={closeModal}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 32 32"
+              fill="none"
+            >
+              <g clip-path="url(#clip0_331_34992)">
+                <path
+                  d="M24 8L8 24"
+                  stroke="black"
+                  stroke-width="2.66667"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M8 8L24 24"
+                  stroke="black"
+                  stroke-width="2.66667"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_331_34992">
+                  <rect width="32" height="32" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          </div>
+          <div className="modal_chat_bot">
+            <p className="template_name_cv">{images[currentImageIndex].name}</p>
+            <div className="modal_sub">
+              <div className="modal-content">
+                <button
+                  className="chat_model_arrow left_arrow_chat norml_type_chat_btn"
+                  onClick={() => navigateImage("prev")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="30"
+                    height="30"
+                    viewBox="0 0 30 30"
+                    fill="none"
+                  >
+                    <mask
+                      id="mask0_331_34978"
+                      maskUnits="userSpaceOnUse"
+                      x="0"
+                      y="0"
+                      width="30"
+                      height="30"
+                    >
+                      <path d="M0 30H30V0H0V30Z" fill="white" />
+                    </mask>
+                    <g mask="url(#mask0_331_34978)">
+                      <path
+                        d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
+                        fill="white"
+                      />
+                    </g>
+                  </svg>
+                </button>
+
+                <img
+                  src={images[currentImageIndex].src}
+                  alt="Modal"
+                  className="model_image_chat"
+                />
+
+                <button
+                  className="chat_model_arrow right_arrow_chat norml_type_chat_btn"
+                  onClick={() => navigateImage("next")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="30"
+                    height="30"
+                    viewBox="0 0 30 30"
+                    fill="none"
+                  >
+                    <mask
+                      id="mask0_331_34985"
+                      maskUnits="userSpaceOnUse"
+                      x="0"
+                      y="0"
+                      width="30"
+                      height="30"
+                    >
+                      <path d="M30 30H0V0H30V30Z" fill="white" />
+                    </mask>
+                    <g mask="url(#mask0_331_34985)">
+                      <path
+                        d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
+                        fill="white"
+                      />
+                    </g>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="res_type_chat_btn">
+              <button
+                className="chat_model_arrow_res left_arrow_chat_res"
+                onClick={() => navigateImage("prev")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                >
+                  <mask
+                    id="mask0_331_34978"
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="30"
+                    height="30"
+                  >
+                    <path d="M0 30H30V0H0V30Z" fill="white" />
+                  </mask>
+                  <g mask="url(#mask0_331_34978)">
+                    <path
+                      d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
+                      fill="white"
+                    />
+                  </g>
+                </svg>
+              </button>
+              <button
+                className="chat_model_arrow_res right_arrow_chat_res"
+                onClick={() => navigateImage("next")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                >
+                  <mask
+                    id="mask0_331_34985"
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="30"
+                    height="30"
+                  >
+                    <path d="M30 30H0V0H30V30Z" fill="white" />
+                  </mask>
+                  <g mask="url(#mask0_331_34985)">
+                    <path
+                      d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
+                      fill="white"
+                    />
+                  </g>
+                </svg>
+              </button>
+            </div>
+            <button
+              onClick={() => (window.location.href = "/currentOrder")}
+              className="back_chat_btn"
+            >
+              Back to chat
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

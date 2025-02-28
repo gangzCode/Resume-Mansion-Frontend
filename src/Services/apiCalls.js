@@ -410,20 +410,16 @@ export const getOrderMessages = async (orderId) => {
 export const sendOrderMessage = async (orderId, message) => {
   const token = localStorage.getItem("token");
 
+  const formData = new FormData();
+  formData.append("order_id", orderId);
+  formData.append("message", message);
+
   try {
-    const response = await axios.post(
-      `${baseUrl}/message`,
-      {
-        order_id: orderId,
-        message: message,
+    const response = await axios.post(`${baseUrl}/message`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    });
     return response.data;
   } catch (error) {
     console.error("Send message error:", error);
