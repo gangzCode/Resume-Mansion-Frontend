@@ -997,9 +997,7 @@ function CartContiner() {
                   <div className="amounr_box_card">
                     <div className="amounr_box_card_data">
                       <p className="amounr_box_cardonee">Sub Total</p>
-                      <p className="amounr_box_cardonee">
-                        ${packageDetails?.price || 0}
-                      </p>
+                      <p className="amounr_box_cardonee">${price || 0}</p>
                     </div>
 
                     {getSelectedServicePrice()}

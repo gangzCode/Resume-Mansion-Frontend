@@ -426,3 +426,17 @@ export const sendOrderMessage = async (orderId, message) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const getResumeImages = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}/sliders`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching resume images:", error);
+    throw error.response ? error.response.data : error;
+  }
+};

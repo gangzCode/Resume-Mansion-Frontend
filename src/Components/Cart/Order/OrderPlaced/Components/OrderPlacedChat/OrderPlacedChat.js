@@ -2,18 +2,30 @@ import React, { useState, useEffect, useRef } from "react";
 import "./OrderPlacedChat.css";
 import Avatar from "./img/oli.webp";
 import AvatarSSend from "./img/Avatarsend.png";
-import temp1 from "./img/temp1.png";
-import temp2 from "./img/temp2.png";
-import temp3 from "./img/temp4.png";
 import {
   getCurrentOrder,
   getOrderMessages,
   sendOrderMessage,
+  getResumeImages,
 } from "../../../../../../Services/apiCalls";
 import { useParams } from "react-router-dom";
 import Loader from "../../../../../Common/Loader";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+};
+
 function OrderPlacedChat() {
+  const [templateImages, setTemplateImages] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [orderData, setOrderData] = useState(null);
@@ -23,16 +35,41 @@ function OrderPlacedChat() {
   const [messageText, setMessageText] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [requirementsSubmittedViaMessage, setRequirementsSubmittedViaMessage] =
+    useState(false);
+  const [orderStartedViaMessage, setOrderStartedViaMessage] = useState(false);
+  const [orderPlacedViaMessage, setorderPlacedViaMessage] = useState(false);
+  const [orderDeliveredViaMessage, setorderDeliveredViaMessage] =
+    useState(false);
+  const [requestedRevisionViaMessage, setrequestedRevisionViaMessage] =
+    useState(false);
+  const [daliverDataUpdatedViaMessage, setdaliverDataUpdatedViaMessage] =
+    useState(false);
+
+  const hasTextMessage = messageText.trim().length > 0;
+  const hasFiles = selectedFiles.length > 0;
+
+  const statusMessages = {
+    requirements: "you submitted the requirements",
+    orderStarted: "your order started",
+    placedOrder: "you placed the order",
+    orderDelivered: "your order delivered",
+    requestedRevision: "you requested revision",
+    deliveryDateUpdated: "your delivery date was updated",
+  };
 
   const chatContainerRef = useRef(null);
 
   const { orderId } = useParams();
 
-  const images = [
-    { src: temp1, name: "a" },
-    { src: temp2, name: "b" },
-    { src: temp3, name: "c" },
-  ];
+  const images =
+    templateImages.length > 0
+      ? templateImages
+      : [
+          { src: "", name: "Template A" },
+          { src: "", name: "Template B" },
+          { src: "", name: "Template C" },
+        ];
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -68,6 +105,8 @@ function OrderPlacedChat() {
           }
         }
 
+        console.log(messages, "messages");
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching order data:", err);
@@ -84,6 +123,79 @@ function OrderPlacedChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const checkMessageContains = (messageText, searchText) => {
+      return messageText && messageText.toLowerCase().includes(searchText);
+    };
+
+    const hasRequirements = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.requirements)
+    );
+    if (hasRequirements) {
+      setRequirementsSubmittedViaMessage(true);
+    }
+
+    const hasOrderStarted = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.orderStarted)
+    );
+    if (hasOrderStarted) {
+      setOrderStartedViaMessage(true);
+    }
+
+    const hasOrderPlaced = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.placedOrder)
+    );
+    if (hasOrderPlaced) {
+      setorderPlacedViaMessage(true);
+    }
+
+    const hasOrderDelivered = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.orderDelivered)
+    );
+    if (hasOrderDelivered) {
+      setorderDeliveredViaMessage(true);
+    }
+
+    const hasRequestedRevision = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.requestedRevision)
+    );
+    if (hasRequestedRevision) {
+      setrequestedRevisionViaMessage(true);
+    }
+
+    const hasDeliveryDateUpdated = messages.some((msg) =>
+      checkMessageContains(msg.message, statusMessages.deliveryDateUpdated)
+    );
+    if (hasDeliveryDateUpdated) {
+      setdaliverDataUpdatedViaMessage(true);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const fetchTemplateImages = async () => {
+      try {
+        setTemplatesLoading(true);
+        const response = await getResumeImages();
+
+        if (response && response.http_status === 200 && response.data) {
+          const formattedImages = response.data.map((item, index) => ({
+            src: item.image,
+            name: `Template ${String.fromCharCode(65 + index)}`,
+            id: item.id,
+          }));
+
+          setTemplateImages(formattedImages);
+        }
+      } catch (err) {
+        console.error("Error fetching resume templates:", err);
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+
+    fetchTemplateImages();
+  }, []);
 
   const handleSendMessage = async () => {
     if (!orderData) return;
@@ -118,7 +230,7 @@ function OrderPlacedChat() {
           created_at: msg.created_at || new Date().toISOString(),
           attachments: msg.attachments || [],
         }));
- 
+
         setMessages(formattedMessages);
         setTimeout(scrollToBottom, 100);
       }
@@ -152,40 +264,23 @@ function OrderPlacedChat() {
   };
 
   const getBackgroundImage = (index) => {
+    if (
+      templatesLoading ||
+      !templateImages[index] ||
+      !templateImages[index].src
+    ) {
+      return {
+        backgroundColor: "#f0f0f0",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      };
+    }
+
     return {
-      backgroundImage: `url(${images[index].src})`,
+      backgroundImage: `url(${templateImages[index].src})`,
       backgroundSize: "cover",
       backgroundPosition: "center",
     };
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-  };
-
-  const hasReachedStatus = (checkStatus) => {
-    if (!orderData || !orderData.status) return false;
-
-    const statusFlow = [
-      "Place order",
-      "Requirements submitted",
-      "In progress",
-      "Delivered",
-    ];
-
-    const currentIndex = statusFlow.indexOf(orderData.status);
-    const checkIndex = statusFlow.indexOf(checkStatus);
-
-    return currentIndex >= checkIndex && checkIndex !== -1;
   };
 
   const handleFileSelect = (e) => {
@@ -201,20 +296,480 @@ function OrderPlacedChat() {
     e.target.value = null;
   };
 
+  const isStatusMessage = (messageText) => {
+    if (!messageText) return false;
+
+    const lowercaseMessage = messageText.toLowerCase();
+
+    return Object.values(statusMessages).some((statusText) =>
+      lowercaseMessage.includes(statusText)
+    );
+  };
+
+  const getCombinedMessages = () => {
+    const regularMessages = messages.filter(
+      (message) => !isStatusMessage(message.message)
+    );
+
+    const statusCards = [];
+
+    if (orderPlacedViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.placedOrder)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "placed",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.created_at || null,
+          title: "You placed the order",
+          icon: "plase",
+        });
+      }
+    }
+
+    if (requirementsSubmittedViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.requirements)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "requirements",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.requirements_submitted_at || null,
+          title: "You submitted the requirements",
+          icon: "edit",
+        });
+      }
+    }
+
+    if (orderStartedViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.orderStarted)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "started",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.order_started_at || null,
+          title: "Your order started",
+          icon: "start",
+        });
+      }
+    }
+
+    if (orderDeliveredViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.orderDelivered)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "delivered",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.delivered_at || null,
+          title: "Your Order delivered",
+          icon: "delivered",
+        });
+      }
+    }
+
+    if (requestedRevisionViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.requestedRevision)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "revision",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.revision_requested_at || null,
+          title: "You requested revision",
+          icon: "revision",
+        });
+      }
+    }
+
+    if (daliverDataUpdatedViaMessage) {
+      const statusMsg = messages.find(
+        (msg) =>
+          msg.message &&
+          msg.message.toLowerCase().includes(statusMessages.deliveryDateUpdated)
+      );
+      if (statusMsg) {
+        statusCards.push({
+          type: "status",
+          statusType: "update",
+          created_at: statusMsg.created_at,
+          apiDate: orderData?.delivery_date_updated || null,
+          title: `Your delivery date was updated to ${
+            orderData?.new_delivery_date
+              ? new Date(orderData.new_delivery_date).toLocaleDateString(
+                  "en-US",
+                  { month: "long", day: "numeric" }
+                )
+              : new Date().toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                })
+          }`,
+          icon: "update",
+        });
+      }
+    }
+
+    const combined = [...regularMessages, ...statusCards];
+
+    return combined.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return dateA - dateB;
+    });
+  };
+
   const removeFile = (index) => {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  const hasTextMessage = messageText.trim().length > 0;
-  const hasFiles = selectedFiles.length > 0;
+  const getStatusIcon = (statusType) => {
+    switch (statusType) {
+      case "placed":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_208_18434)">
+              <path
+                d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"
+                stroke="#4A7D06"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 12L20 7.5"
+                stroke="#4A7D06"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 12V21"
+                stroke="#4A7D06"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 12L4 7.5"
+                stroke="#4A7D06"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M16 5.25L8 9.75"
+                stroke="#4A7D06"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_208_18434">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      case "requirements":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_40000010_7999)">
+              <path
+                d="M4 19.9998H8L18.5 9.49981C18.7626 9.23717 18.971 8.92537 19.1131 8.58221C19.2553 8.23905 19.3284 7.87125 19.3284 7.49981C19.3284 7.12838 19.2553 6.76058 19.1131 6.41742C18.971 6.07426 18.7626 5.76246 18.5 5.49981C18.2374 5.23717 17.9256 5.02883 17.5824 4.88669C17.2392 4.74455 16.8714 4.67139 16.5 4.67139C16.1286 4.67139 15.7608 4.74455 15.4176 4.88669C15.0744 5.02883 14.7626 5.23717 14.5 5.49981L4 15.9998V19.9998Z"
+                stroke="#1760B2"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M13.5 6.5L17.5 10.5"
+                stroke="#1760B2"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_40000010_7999">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      case "started":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_40000010_8008)">
+              <path
+                d="M4 13C5.78309 13.2119 7.44305 14.0175 8.71276 15.2872C9.98247 16.557 10.7881 18.2169 11 20C11.8839 19.4904 12.6233 18.7638 13.1482 17.8889C13.6732 17.014 13.9663 16.0197 14 15C15.6791 14.4093 17.1454 13.334 18.2133 11.91C19.2813 10.486 19.9031 8.77734 20 7C20 6.20435 19.6839 5.44129 19.1213 4.87868C18.5587 4.31607 17.7956 4 17 4C15.2227 4.09691 13.514 4.71867 12.09 5.78665C10.666 6.85464 9.59069 8.32089 9 10C7.98026 10.0337 6.98596 10.3268 6.11106 10.8518C5.23617 11.3767 4.50959 12.1161 4 13Z"
+                stroke="#C415B5"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M7.00048 14C5.95971 14.5876 5.11814 15.4726 4.58364 16.5416C4.04914 17.6106 3.84608 18.8148 4.00048 20C5.18564 20.1544 6.38991 19.9513 7.4589 19.4168C8.5279 18.8823 9.41291 18.0408 10.0005 17"
+                stroke="#C415B5"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M14 9C14 9.26522 14.1054 9.51957 14.2929 9.70711C14.4804 9.89464 14.7348 10 15 10C15.2652 10 15.5196 9.89464 15.7071 9.70711C15.8946 9.51957 16 9.26522 16 9C16 8.73478 15.8946 8.48043 15.7071 8.29289C15.5196 8.10536 15.2652 8 15 8C14.7348 8 14.4804 8.10536 14.2929 8.29289C14.1054 8.48043 14 8.73478 14 9Z"
+                stroke="#C415B5"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_40000010_8008">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      case "delivered":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_208_18613)">
+              <path
+                d="M5 17C5 17.5304 5.21071 18.0391 5.58579 18.4142C5.96086 18.7893 6.46957 19 7 19C7.53043 19 8.03914 18.7893 8.41421 18.4142C8.78929 18.0391 9 17.5304 9 17C9 16.4696 8.78929 15.9609 8.41421 15.5858C8.03914 15.2107 7.53043 15 7 15C6.46957 15 5.96086 15.2107 5.58579 15.5858C5.21071 15.9609 5 16.4696 5 17Z"
+                stroke="#063B26"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M15 17C15 17.5304 15.2107 18.0391 15.5858 18.4142C15.9609 18.7893 16.4696 19 17 19C17.5304 19 18.0391 18.7893 18.4142 18.4142C18.7893 18.0391 19 17.5304 19 17C19 16.4696 18.7893 15.9609 18.4142 15.5858C18.0391 15.2107 17.5304 15 17 15C16.4696 15 15.9609 15.2107 15.5858 15.5858C15.2107 15.9609 15 16.4696 15 17Z"
+                stroke="#063B26"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M5 17H3V13M2 5H13V17M9 17H15M19 17H21V11M21 11H13M21 11L18 6H13"
+                stroke="#063B26"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M3 9H7"
+                stroke="#063B26"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_208_18613">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      case "revision":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_208_18638)">
+              <path
+                d="M15.0001 4.54997C14.0217 4.15601 12.9754 3.9586 11.9207 3.96902C10.8661 3.97944 9.82384 4.19749 8.85347 4.61071C7.8831 5.02393 7.00362 5.62423 6.26524 6.37734C5.52687 7.13045 4.94406 8.02162 4.5501 8.99997C3.75445 10.9758 3.77629 13.1868 4.61083 15.1466C5.44537 17.1064 7.02423 18.6543 9.00009 19.45M9.00009 15V20H4.00009"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M18.3701 7.15997V7.16997"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M13 19.94V19.95"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M16.8398 18.37V18.38"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M19.3701 15.1V15.11"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M19.9404 11V11.01"
+                stroke="#B03200"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_208_18638">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      case "update":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clip-path="url(#clip0_208_18660)">
+              <path
+                d="M3 12C3 13.1819 3.23279 14.3522 3.68508 15.4442C4.13738 16.5361 4.80031 17.5282 5.63604 18.364C6.47177 19.1997 7.46392 19.8626 8.55585 20.3149C9.64778 20.7672 10.8181 21 12 21C13.1819 21 14.3522 20.7672 15.4442 20.3149C16.5361 19.8626 17.5282 19.1997 18.364 18.364C19.1997 17.5282 19.8626 16.5361 20.3149 15.4442C20.7672 14.3522 21 13.1819 21 12C21 10.8181 20.7672 9.64778 20.3149 8.55585C19.8626 7.46392 19.1997 6.47177 18.364 5.63604C17.5282 4.80031 16.5361 4.13738 15.4442 3.68508C14.3522 3.23279 13.1819 3 12 3C10.8181 3 9.64778 3.23279 8.55585 3.68508C7.46392 4.13738 6.47177 4.80031 5.63604 5.63604C4.80031 6.47177 4.13738 7.46392 3.68508 8.55585C3.23279 9.64778 3 10.8181 3 12Z"
+                stroke="#54009A"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 12L10 15"
+                stroke="#54009A"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 7V12"
+                stroke="#54009A"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_208_18660">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      default:
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g clipPath="url(#clip0_status_default)">
+              <path
+                d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"
+                stroke="#4A7D06"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 12L20 7.5"
+                stroke="#4A7D06"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 12V21"
+                stroke="#4A7D06"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 12L4 7.5"
+                stroke="#4A7D06"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M16 5.25L8 9.75"
+                stroke="#4A7D06"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_status_default">
+                <rect width="24" height="24" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+    }
+  };
 
   return (
     <div>
@@ -420,7 +975,6 @@ function OrderPlacedChat() {
                 <p className="OrderPlacedChat_section_one_date">now</p>
               </div>
             )}
-
             <div className="OrderPlacedChat_section_two">
               <div className="order_line"></div>
               <svg
@@ -440,101 +994,521 @@ function OrderPlacedChat() {
               </p>
               <div className="order_line"></div>
             </div>
-
             {/* Show requirements section if requirements not submitted yet */}
-            {orderData && orderData.status === "Place order" && (
-              <div className="OrderPlacedChat_section_three chat_resivebox">
-                <p className="OrderPlacedChat_section_three_topic">
-                  Please submit the requirements below to get the job started
+            <div className="OrderPlacedChat_section_three chat_resivebox">
+              <p className="OrderPlacedChat_section_three_topic">
+                Please submit the requirements below to get the job started
+              </p>
+              <div className="OrderPlacedChat_section_three_data">
+                <p className="OrderPlacedChat_section_three_data_topic">
+                  <b>A.</b> Your target job title
                 </p>
-                <div className="OrderPlacedChat_section_three_data">
-                  <p className="OrderPlacedChat_section_three_data_topic">
-                    <b>A.</b> Your target job title
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    (Place separate orders if you are targeting multiple
-                    industries)
-                  </p>
-                </div>
-                <div className="OrderPlacedChat_section_three_data">
-                  <p className="OrderPlacedChat_section_three_data_topic">
-                    <b>B.</b> Work experience
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    1. Company
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    2. Position
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    3. Period
-                  </p>
-                </div>
-                <div className="OrderPlacedChat_section_three_data">
-                  <p className="OrderPlacedChat_section_three_data_topic">
-                    <b>C.</b> Personal details
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    1. Address
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    2. Phone
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    3. Email
-                  </p>
-                </div>
-                <div className="OrderPlacedChat_section_three_data">
-                  <p className="OrderPlacedChat_section_three_data_topic">
-                    <b>D.</b> Education details
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    1. College/school/university
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    2. Course
-                  </p>
-                  <p className="OrderPlacedChat_section_three_data_pera">
-                    3. Year
-                  </p>
-                </div>
-                <div className="OrderPlacedChat_section_three_data">
-                  <p className="OrderPlacedChat_section_three_data_topic">
-                    <b>E.</b> Your current CV/Resume (If you have one)
-                  </p>
-                </div>
-                <p className="OrderPlacedChat_section_three_data_sub_topic">
-                  Copy this template to your clip board
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                  >
-                    {/* SVG content */}
-                  </svg>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  (Place separate orders if you are targeting multiple
+                  industries)
                 </p>
               </div>
-            )}
-
-            {/* Admin connected message */}
-            {orderData && orderData.admin_name && (
-              <p className="new_user_conect">
-                {orderData.admin_name} connected to the chat
+              <div className="OrderPlacedChat_section_three_data">
+                <p className="OrderPlacedChat_section_three_data_topic">
+                  <b>B.</b> Work experience
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  1. Company
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  2. Position
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  3. Period
+                </p>
+              </div>
+              <div className="OrderPlacedChat_section_three_data">
+                <p className="OrderPlacedChat_section_three_data_topic">
+                  <b>C.</b> Personal details
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  1. Address
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  2. Phone
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  3. Email
+                </p>
+              </div>
+              <div className="OrderPlacedChat_section_three_data">
+                <p className="OrderPlacedChat_section_three_data_topic">
+                  <b>D.</b> Education details
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  1. College/school/university
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  2. Course
+                </p>
+                <p className="OrderPlacedChat_section_three_data_pera">
+                  3. Year
+                </p>
+              </div>
+              <div className="OrderPlacedChat_section_three_data">
+                <p className="OrderPlacedChat_section_three_data_topic">
+                  <b>E.</b> Your current CV/Resume (If you have one)
+                </p>
+              </div>
+              <p className="OrderPlacedChat_section_three_data_sub_topic">
+                Copy this template to your clip board
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                >
+                  <g clip-path="url(#clip0_40000010_7890)">
+                    <path
+                      d="M5.83301 8.056C5.83301 7.46655 6.06716 6.90125 6.48396 6.48445C6.90076 6.06765 7.46606 5.8335 8.05551 5.8335H15.2772C15.569 5.8335 15.858 5.89098 16.1277 6.00267C16.3973 6.11437 16.6423 6.27807 16.8487 6.48445C17.0551 6.69083 17.2188 6.93584 17.3305 7.20548C17.4422 7.47513 17.4997 7.76413 17.4997 8.056V15.2777C17.4997 15.5695 17.4422 15.8585 17.3305 16.1282C17.2188 16.3978 17.0551 16.6428 16.8487 16.8492C16.6423 17.0556 16.3973 17.2193 16.1277 17.331C15.858 17.4427 15.569 17.5002 15.2772 17.5002H8.05551C7.76365 17.5002 7.47464 17.4427 7.20499 17.331C6.93535 17.2193 6.69034 17.0556 6.48396 16.8492C6.27758 16.6428 6.11388 16.3978 6.00219 16.1282C5.89049 15.8585 5.83301 15.5695 5.83301 15.2777V8.056Z"
+                      stroke="#0D5438"
+                      stroke-width="1.66667"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M3.34333 13.9475C3.08779 13.8018 2.87523 13.5912 2.72715 13.3371C2.57906 13.0829 2.50071 12.7942 2.5 12.5V4.16667C2.5 3.25 3.25 2.5 4.16667 2.5H12.5C13.125 2.5 13.465 2.82083 13.75 3.33333"
+                      stroke="#0D5438"
+                      stroke-width="1.66667"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_40000010_7890">
+                      <rect width="20" height="20" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
               </p>
-            )}
+            </div>
+            <p className="new_user_conect">Admin connected to the chat</p>
+            {/*Receive msg */}
+            <div className="Receive_msg_con">
+              <div className="chat_resivebox">
+                <p className="resive_msg">
+                  Thank you for choosing Resume Mansion! We’ve received your
+                  order and are currently reviewing the details. If you have any
+                  questions or need further assistance, please don’t hesitate to
+                  reach out. We’re here to help you every step of the way!
+                  Looking forward to working with you!
+                </p>
+              </div>
+              <div className="sender_box">
+                <div className="auther_continer_blog_card">
+                  <img
+                    src={Avatar}
+                    alt="avatar_image"
+                    className="avatar_card_blog"
+                  />
+                  <div className="auther_data_set">
+                    <p className="avatar_name_blog">Admin</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {messages.map((message, index) =>
-              message.sender_type === "admin" ? (
-                <div key={index} className="Receive_msg_con">
+            <div className="Receive_msg_con">
+              <div className="chat_resivebox">
+                <p className="resive_msg">
+                  Please tell us your preferred template for your resume. We
+                  recommend options A and B for the best impact!
+                </p>
+              </div>
+              <div className="chat_resivebox">
+                <div className="cv_template_con">
+                  <div
+                    className="cv_template_boxone"
+                    style={getBackgroundImage(0)}
+                    onClick={() => openModal(0)}
+                  >
+                    <p className="cv_template_box_num">A</p>
+                    <div className="cv_template_box_zome">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <g clip-path="url(#clip0_331_33125)">
+                          <path
+                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M5.83398 8.33301H10.834"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M8.33398 5.83301V10.833"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M17.5 17.5L12.5 12.5"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_331_33125">
+                            <rect width="20" height="20" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    className="cv_template_boxtwo"
+                    style={getBackgroundImage(1)}
+                    onClick={() => openModal(1)}
+                  >
+                    <p className="cv_template_box_num">B</p>
+                    <div className="cv_template_box_zome">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <g clip-path="url(#clip0_331_33125)">
+                          <path
+                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M5.83398 8.33301H10.834"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M8.33398 5.83301V10.833"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M17.5 17.5L12.5 12.5"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_331_33125">
+                            <rect width="20" height="20" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    className="cv_template_boxthree"
+                    style={getBackgroundImage(2)}
+                    onClick={() => openModal(2)}
+                  >
+                    <p className="cv_template_box_num">C</p>
+                    <div className="cv_template_box_zome">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <g clip-path="url(#clip0_331_33125)">
+                          <path
+                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M5.83398 8.33301H10.834"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M8.33398 5.83301V10.833"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M17.5 17.5L12.5 12.5"
+                            stroke="black"
+                            stroke-width="1.66667"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_331_33125">
+                            <rect width="20" height="20" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {isModalOpen && (
+                    <div className="main_model_con_cv">
+                      <div className="modal-overlay_close" onClick={closeModal}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 32 32"
+                          fill="none"
+                        >
+                          <g clip-path="url(#clip0_331_34992)">
+                            <path
+                              d="M24 8L8 24"
+                              stroke="black"
+                              stroke-width="2.66667"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M8 8L24 24"
+                              stroke="black"
+                              stroke-width="2.66667"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </g>
+                          <defs>
+                            <clipPath id="clip0_331_34992">
+                              <rect width="32" height="32" fill="white" />
+                            </clipPath>
+                          </defs>
+                        </svg>
+                      </div>
+                      <div className="modal_chat_bot">
+                        <p className="template_name_cv">
+                          {images[currentImageIndex].name}
+                        </p>
+                        <div className="modal_sub">
+                          <div className="modal-content">
+                            <button
+                              className="chat_model_arrow left_arrow_chat norml_type_chat_btn"
+                              onClick={() => navigateImage("prev")}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="30"
+                                height="30"
+                                viewBox="0 0 30 30"
+                                fill="none"
+                              >
+                                <mask
+                                  id="mask0_331_34978"
+                                  maskUnits="userSpaceOnUse"
+                                  x="0"
+                                  y="0"
+                                  width="30"
+                                  height="30"
+                                >
+                                  <path d="M0 30H30V0H0V30Z" fill="white" />
+                                </mask>
+                                <g mask="url(#mask0_331_34978)">
+                                  <path
+                                    d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
+                                    fill="white"
+                                  />
+                                </g>
+                              </svg>
+                            </button>
+
+                            {templatesLoading ? (
+                              <div className="template-loading">
+                                Loading templates...
+                              </div>
+                            ) : !templateImages[currentImageIndex] ||
+                              !templateImages[currentImageIndex].src ? (
+                              <div className="template-error">
+                                Template image not available
+                              </div>
+                            ) : (
+                              <img
+                                src={templateImages[currentImageIndex].src}
+                                alt={templateImages[currentImageIndex].name}
+                                className="model_image_chat"
+                              />
+                            )}
+
+                            <button
+                              className="chat_model_arrow right_arrow_chat norml_type_chat_btn"
+                              onClick={() => navigateImage("next")}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="30"
+                                height="30"
+                                viewBox="0 0 30 30"
+                                fill="none"
+                              >
+                                <mask
+                                  id="mask0_331_34985"
+                                  maskUnits="userSpaceOnUse"
+                                  x="0"
+                                  y="0"
+                                  width="30"
+                                  height="30"
+                                >
+                                  <path d="M30 30H0V0H30V30Z" fill="white" />
+                                </mask>
+                                <g mask="url(#mask0_331_34985)">
+                                  <path
+                                    d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
+                                    fill="white"
+                                  />
+                                </g>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="res_type_chat_btn">
+                          <button
+                            className="chat_model_arrow_res left_arrow_chat_res"
+                            onClick={() => navigateImage("prev")}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="30"
+                              height="30"
+                              viewBox="0 0 30 30"
+                              fill="none"
+                            >
+                              <mask
+                                id="mask0_331_34978"
+                                maskUnits="userSpaceOnUse"
+                                x="0"
+                                y="0"
+                                width="30"
+                                height="30"
+                              >
+                                <path d="M0 30H30V0H0V30Z" fill="white" />
+                              </mask>
+                              <g mask="url(#mask0_331_34978)">
+                                <path
+                                  d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
+                                  fill="white"
+                                />
+                              </g>
+                            </svg>
+                          </button>
+                          <button
+                            className="chat_model_arrow_res right_arrow_chat_res"
+                            onClick={() => navigateImage("next")}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="30"
+                              height="30"
+                              viewBox="0 0 30 30"
+                              fill="none"
+                            >
+                              <mask
+                                id="mask0_331_34985"
+                                maskUnits="userSpaceOnUse"
+                                x="0"
+                                y="0"
+                                width="30"
+                                height="30"
+                              >
+                                <path d="M30 30H0V0H30V30Z" fill="white" />
+                              </mask>
+                              <g mask="url(#mask0_331_34985)">
+                                <path
+                                  d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
+                                  fill="white"
+                                />
+                              </g>
+                            </svg>
+                          </button>
+                        </div>
+                        <button
+                          onClick={() =>
+                            (window.location.href = "/currentOrder")
+                          }
+                          className="back_chat_btn"
+                        >
+                          Back to chat
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="sender_box">
+                <div className="auther_continer_blog_card">
+                  <img
+                    src={Avatar}
+                    alt="avatar_image"
+                    className="avatar_card_blog"
+                  />
+                  <div className="auther_data_set">
+                    <p className="avatar_name_blog">Admin</p>
+                    {/* <p className="avatar_date">Oct 02, 7:38 PM</p> */}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {getCombinedMessages().map((item, index) =>
+              item.type === "status" ? (
+                <div key={`status-${index}`} className="order_status_card">
+                  <div className={`order_status_card_icon_${item.icon}`}>
+                    {getStatusIcon(item.statusType)}
+                  </div>
+                  <p className="order_status_card_title">{item.title}</p>
+                  <p className="order_status_card_date">
+                    {item.apiDate
+                      ? formatDate(item.apiDate)
+                      : item.created_at
+                      ? formatDate(item.created_at)
+                      : "N/A"}
+                  </p>
+                </div>
+              ) : item.sender_type === "admin" ? (
+                <div key={`msg-${index}`} className="Receive_msg_con">
                   <div className="chat_resivebox">
-                    <p className="resive_msg">{message.message}</p>
+                    <p className="resive_msg">{item.message}</p>
 
-                    {/* Show attachments if any */}
-                    {message.attachments &&
-                      message.attachments.length > 0 &&
-                      message.attachments.map((attachment, idx) => (
+                    {/* Attachments rendering */}
+                    {item.attachments &&
+                      item.attachments.length > 0 &&
+                      item.attachments.map((attachment, idx) => (
                         <div key={idx} className="doc_card_cv">
                           <div className="doc_name_card_type">
                             <svg
@@ -573,27 +1547,27 @@ function OrderPlacedChat() {
                       />
                       <div className="auther_data_set">
                         <p className="avatar_name_blog">
-                          {message.sender_name ||
+                          {item.sender_name ||
                             orderData.admin_name ||
                             "Team Member"}
                         </p>
                         <p className="avatar_date">
-                          {formatDate(message.created_at)}
+                          {formatDate(item.created_at)}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div key={index} className="send_msg_con">
+                <div key={`msg-${index}`} className="send_msg_con">
                   <div className="send_msg_box">
-                    <p className="resive_msg">{message.message}</p>
+                    <p className="resive_msg">{item.message}</p>
                   </div>
 
-                  {/* Show attachments if any */}
-                  {message.attachments && message.attachments.length > 0 && (
+                  {/* Attachments rendering */}
+                  {item.attachments && item.attachments.length > 0 && (
                     <div className="cv_send">
-                      {message.attachments.map((attachment, idx) => (
+                      {item.attachments.map((attachment, idx) => (
                         <div key={idx} className="send_box_cv">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -615,7 +1589,7 @@ function OrderPlacedChat() {
                       <div className="auther_data_set">
                         <p className="avatar_name_blog">You</p>
                         <p className="avatar_date">
-                          {formatDate(message.created_at)}
+                          {formatDate(item.created_at)}
                         </p>
                       </div>
                       <div className="sender_pro_icon">U</div>
@@ -623,141 +1597,6 @@ function OrderPlacedChat() {
                   </div>
                 </div>
               )
-            )}
-
-            {/* Order Status Cards based on API status */}
-            {orderData && (
-              <>
-                {hasReachedStatus("Requirements submitted") && (
-                  <div className="order_status_card">
-                    <div className="order_status_card_icon_edit">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        {/* SVG for requirements submitted */}
-                      </svg>
-                    </div>
-                    <p className="order_status_card_title">
-                      You submitted the requirements
-                    </p>
-                    <p className="order_status_card_date">
-                      {formatDate(orderData.requirements_submitted_at)}
-                    </p>
-                  </div>
-                )}
-
-                {/* In progress */}
-                {hasReachedStatus("In progress") && (
-                  <div className="order_status_card">
-                    <div className="order_status_card_icon_start">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        {/* SVG for in progress */}
-                      </svg>
-                    </div>
-                    <p className="order_status_card_title">
-                      Your order started
-                    </p>
-                    <p className="order_status_card_date">
-                      {formatDate(orderData.started_at)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Delivered */}
-                {hasReachedStatus("Delivered") && (
-                  <div className="order_status_card">
-                    <div className="order_status_card_icon_delivered">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        {/* SVG for delivered */}
-                      </svg>
-                    </div>
-                    <p className="order_status_card_title">
-                      Your Order delivered
-                    </p>
-                    <p className="order_status_card_date">
-                      {formatDate(orderData.delivered_at)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Revision requested */}
-                {orderData.revision_requested_at && (
-                  <div className="order_status_card">
-                    <div className="order_status_card_icon_revision">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        {/* SVG for revision */}
-                      </svg>
-                    </div>
-                    <p className="order_status_card_title">
-                      You requested revision
-                    </p>
-                    <p className="order_status_card_date">
-                      {formatDate(orderData.revision_requested_at)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Delivery date updated */}
-                {orderData.delivery_date_updated && (
-                  <div className="order_status_card">
-                    <div className="order_status_card_icon_update">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        {/* SVG for date update */}
-                      </svg>
-                    </div>
-                    <p className="order_status_card_title">
-                      Your delivery date was updated to{" "}
-                      {new Date(orderData.new_delivery_date).toLocaleDateString(
-                        "en-US",
-                        { month: "long", day: "numeric" }
-                      )}
-                    </p>
-                    <p className="order_status_card_date">
-                      {formatDate(orderData.delivery_date_updated)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Add Order Again button after Delivered status */}
-                {hasReachedStatus("Delivered") && (
-                  <div className="order_again_container">
-                    <button
-                      className="order_again_btn"
-                      onClick={handleOrderAgain}
-                    >
-                      Order Again
-                    </button>
-                  </div>
-                )}
-              </>
             )}
           </div>
         </div>
@@ -954,7 +1793,7 @@ function OrderPlacedChat() {
                 {sendingMessage ? (
                   <div className="send_loading">
                     <div className="send_loading_spinner"></div>
-                    <span>Sending...</span>
+                    <span>.....</span>
                   </div>
                 ) : (
                   <>
@@ -1032,7 +1871,6 @@ function OrderPlacedChat() {
             </svg>
           </div>
           <div className="modal_chat_bot">
-            <p className="template_name_cv">{images[currentImageIndex].name}</p>
             <div className="modal_sub">
               <div className="modal-content">
                 <button
@@ -1065,11 +1903,20 @@ function OrderPlacedChat() {
                   </svg>
                 </button>
 
-                <img
-                  src={images[currentImageIndex].src}
-                  alt="Modal"
-                  className="model_image_chat"
-                />
+                {templatesLoading ? (
+                  <div className="template-loading">Loading templates...</div>
+                ) : !templateImages[currentImageIndex] ||
+                  !templateImages[currentImageIndex].src ? (
+                  <div className="template-error">
+                    Template image not available
+                  </div>
+                ) : (
+                  <img
+                    src={templateImages[currentImageIndex].src}
+                    alt={templateImages[currentImageIndex].name}
+                    className="model_image_chat"
+                  />
+                )}
 
                 <button
                   className="chat_model_arrow right_arrow_chat norml_type_chat_btn"
