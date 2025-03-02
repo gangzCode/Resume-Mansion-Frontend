@@ -36,6 +36,8 @@ function OrderPlacedChat() {
   const [messageText, setMessageText] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  const [lastMessageTimestamp, setLastMessageTimestamp] = useState(null);
   const location = useLocation();
 
   const [requirementsSubmittedViaMessage, setRequirementsSubmittedViaMessage] =
@@ -62,6 +64,7 @@ function OrderPlacedChat() {
   };
 
   const chatContainerRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
   const orderId = location.state?.id;
 
@@ -78,6 +81,51 @@ function OrderPlacedChat() {
     if (chatContainerRef.current) {
       const scrollContainer = chatContainerRef.current;
       scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      setHasNewMessages(false);
+    }
+  };
+
+  const fetchMessages = async (orderId) => {
+    if (!orderId) return;
+
+    try {
+      const messagesResponse = await getOrderMessages(orderId);
+
+      if (messagesResponse && messagesResponse.messages) {
+        const formattedMessages = messagesResponse.messages.map((msg) => ({
+          message: msg.message,
+          sender_type: msg.side === "right" ? "user" : "admin",
+          sender_name: msg.user || "Team Member",
+          created_at: msg.created_at || new Date().toISOString(),
+          attachments: msg.attachments || [],
+        }));
+
+        if (lastMessageTimestamp) {
+          const newAdminMessages = formattedMessages.filter(
+            (msg) =>
+              msg.sender_type === "admin" &&
+              new Date(msg.created_at) > new Date(lastMessageTimestamp)
+          );
+
+          if (newAdminMessages.length > 0) {
+            setHasNewMessages(true);
+          }
+        }
+
+        if (formattedMessages.length > 0) {
+          const timestamps = formattedMessages.map((msg) =>
+            new Date(msg.created_at).getTime()
+          );
+          const latestTimestamp = new Date(
+            Math.max(...timestamps)
+          ).toISOString();
+          setLastMessageTimestamp(latestTimestamp);
+        }
+
+        setMessages(formattedMessages);
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
     }
   };
 
@@ -90,22 +138,7 @@ function OrderPlacedChat() {
         if (orderResponse && orderResponse.data) {
           setOrderData(orderResponse.data);
 
-          const messagesResponse = await getOrderMessages(
-            orderResponse.data.order_id
-          );
-
-          if (messagesResponse && messagesResponse.messages) {
-            const formattedMessages = messagesResponse.messages.map((msg) => ({
-              message: msg.message,
-              sender_type: msg.side === "right" ? "user" : "admin",
-              sender_name: msg.user || "Team Member",
-              created_at: msg.created_at || new Date().toISOString(),
-            }));
-
-            console.log("formattedMessages", formattedMessages);
-
-            setMessages(formattedMessages);
-          }
+          await fetchMessages(orderResponse.data.order_id);
         }
 
         console.log(messages, "messages");
@@ -121,6 +154,41 @@ function OrderPlacedChat() {
     };
 
     fetchOrderData();
+
+    if (orderData?.order_id) {
+      pollingIntervalRef.current = setInterval(() => {
+        fetchMessages(orderData.order_id);
+      }, 1000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [orderId]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (chatContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } =
+          chatContainerRef.current;
+        if (scrollHeight - scrollTop - clientHeight < 50) {
+          setHasNewMessages(false);
+        }
+      }
+    };
+
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -201,19 +269,11 @@ function OrderPlacedChat() {
   }, []);
 
   const handleSendMessage = async () => {
-    if (!orderData) return;
-
-    if (messageText.trim() && selectedFiles.length > 0) {
-      alert(
-        "Please send either a message OR files, not both at the same time."
-      );
-      return;
-    }
-
-    if (!messageText.trim() && selectedFiles.length === 0) return;
-
     try {
+      if (!hasTextMessage && !hasFiles) return;
+
       setSendingMessage(true);
+      setHasNewMessages(false);
 
       await sendOrderMessage(
         orderData.order_id,
@@ -918,6 +978,16 @@ function OrderPlacedChat() {
         >
           {loading && <Loader />}
           <div className="OrderPlacedChat_section_continer">
+            {hasNewMessages && (
+              <div
+                className="new-message-indicator"
+                onClick={scrollToBottom}
+                title="New message from admin"
+              >
+                <div className="new-message-indicator-dot"></div>
+                New message received
+              </div>
+            )}
             {orderData && (
               <div className="OrderPlacedChat_section_one">
                 <div className="OrderPlacedChat_section_one_icon">
