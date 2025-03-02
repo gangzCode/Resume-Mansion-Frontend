@@ -50,6 +50,7 @@ function OrderPlacedChat() {
     useState(false);
   const [daliverDataUpdatedViaMessage, setdaliverDataUpdatedViaMessage] =
     useState(false);
+  const [previousMessageCount, setPreviousMessageCount] = useState(0);
 
   const hasTextMessage = messageText.trim().length > 0;
   const hasFiles = selectedFiles.length > 0;
@@ -100,6 +101,9 @@ function OrderPlacedChat() {
           attachments: msg.attachments || [],
         }));
 
+        const hasNewIncomingMessages =
+          formattedMessages.length > previousMessageCount;
+
         if (lastMessageTimestamp) {
           const newAdminMessages = formattedMessages.filter(
             (msg) =>
@@ -109,6 +113,17 @@ function OrderPlacedChat() {
 
           if (newAdminMessages.length > 0) {
             setHasNewMessages(true);
+
+            if (hasNewIncomingMessages && chatContainerRef.current) {
+              const { scrollTop, scrollHeight, clientHeight } =
+                chatContainerRef.current;
+              const isNearBottom =
+                scrollHeight - scrollTop - clientHeight < 200;
+
+              if (isNearBottom) {
+                setTimeout(scrollToBottom, 100);
+              }
+            }
           }
         }
 
@@ -122,6 +137,7 @@ function OrderPlacedChat() {
           setLastMessageTimestamp(latestTimestamp);
         }
 
+        setPreviousMessageCount(formattedMessages.length);
         setMessages(formattedMessages);
       }
     } catch (err) {
@@ -192,8 +208,10 @@ function OrderPlacedChat() {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > 0 && !loading) {
+      setTimeout(scrollToBottom, 300);
+    }
+  }, [messages.length, loading]);
 
   useEffect(() => {
     const checkMessageContains = (messageText, searchText) => {
@@ -296,6 +314,7 @@ function OrderPlacedChat() {
 
         setMessages(formattedMessages);
         setTimeout(scrollToBottom, 100);
+        setPreviousMessageCount(formattedMessages.length);
       }
     } catch (err) {
       console.error("Error sending message:", err);
@@ -978,16 +997,6 @@ function OrderPlacedChat() {
         >
           {loading && <Loader />}
           <div className="OrderPlacedChat_section_continer">
-            {hasNewMessages && (
-              <div
-                className="new-message-indicator"
-                onClick={scrollToBottom}
-                title="New message from admin"
-              >
-                <div className="new-message-indicator-dot"></div>
-                New message received
-              </div>
-            )}
             {orderData && (
               <div className="OrderPlacedChat_section_one">
                 <div className="OrderPlacedChat_section_one_icon">
