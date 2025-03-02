@@ -15,6 +15,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
@@ -27,6 +28,14 @@ function Login() {
     try {
       const response = await loginUser(email, password);
       const { token, info } = response.data;
+
+      if (rememberMe) {
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + 30);
+        localStorage.setItem("tokenExpiration", expirationDate.toISOString());
+      } else {
+        localStorage.removeItem("tokenExpiration");
+      }
 
       login(token, info);
 
@@ -229,6 +238,8 @@ function Login() {
                         type="checkbox"
                         id="remember_me"
                         className="remember_me_input"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
                       />
                       <label htmlFor="remember_me" className="remember_me">
                         Remember for 30 days
@@ -300,7 +311,7 @@ function Login() {
                     Sign in with Apple
                   </button>
                   <p className="no_acc">
-                    Don’t have an account?
+                    Don't have an account?
                     <span
                       className="sub_no_acc"
                       onClick={() => (window.location.href = "/register")}
