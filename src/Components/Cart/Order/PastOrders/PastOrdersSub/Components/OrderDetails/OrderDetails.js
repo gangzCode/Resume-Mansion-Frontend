@@ -144,7 +144,7 @@ function OrderDetails() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const orderResponse = await getCurrentOrder();
+        const orderResponse = await getPreviousOrderDetails(orderId);
         if (orderResponse.http_status_message === "Success") {
           setOrderDetails(orderResponse.data);
 
