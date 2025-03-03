@@ -69,7 +69,7 @@
 .cart_card_pera {
   font-size: 14px;
   line-height: 1.5;
-  color: #4B5852;
+  color: #4b5852;
   margin: 8px 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -595,7 +595,7 @@ input[type="number"] {
     display: flex;
   }
   .cart_card_continer {
-    gap: 0px;
+    gap: 10px;
   }
   .cart_continer_main {
     gap: 15px;

@@ -414,7 +414,7 @@
     width: 100%;
   }
   .nav_oitem_continer {
-    padding: 20px 32px;
+    padding: 20px 12px;
   }
 
   @keyframes slideIn {
