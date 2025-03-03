@@ -17,7 +17,7 @@ import {
 } from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(
-  "pk_test_51Qt02JBCCDTvPwlcSD8dUjs8EdRhNuVccQjTtQ38OryhmBG7C50Kvdca9F9ehiXqBrYcphwMk6RlRqerwovmjdfO00u0qQMgSy"
+  "pk_test_51QycJvBOp5kjpMN7KQ9msUMvpURA7PkcvlfzTah60mxY1OmSQ05gLhbMow8lHADOHEm6c8uDBoChiLtDQQ7pnBIK00S5U2hgaP"
 );
 
 function PaymentForm({
