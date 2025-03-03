@@ -1073,8 +1073,8 @@ function OrderPlacedChat() {
                   You placed the order
                 </p>
                 <p className="OrderPlacedChat_section_one_date">
-                  {orderData?.updated_at
-                    ? formatDate(orderData?.updated_at)
+                  {orderData?.created_at
+                    ? formatDate(orderData?.created_at)
                     : "now"}
                 </p>
               </div>
@@ -1214,8 +1214,8 @@ function OrderPlacedChat() {
                   <div className="auther_data_set">
                     <p className="avatar_name_blog">Admin</p>
                     <p className="avatar_date">
-                      {orderData?.updated_at
-                        ? formatDate(orderData?.updated_at)
+                      {orderData?.created_at
+                        ? formatDate(orderData?.created_at)
                         : "now"}
                     </p>
                   </div>
