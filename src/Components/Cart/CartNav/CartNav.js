@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import "./CartNav.css";
-import { FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../../Context/AuthContext";
+
 function CartNav() {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [servicesOpenMobile, setServicesOpenMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const orderDetailsLocal = localStorage.getItem("orderDetails");
+  const prevOrderDetailsLocal = localStorage.getItem("prevOrderDetails");
+
   const toggleServices = () => {
     setServicesOpen(!servicesOpen);
   };
@@ -16,6 +24,23 @@ function CartNav() {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  const handleUserClick = () => {
+    console.log("orderDetailsLocal", orderDetailsLocal);
+
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      if (orderDetailsLocal) {
+        console.log("orderDetailsLocal", orderDetailsLocal);
+
+        navigate("/currentOrder");
+      } else if (prevOrderDetailsLocal) {
+        navigate("/previousOrders");
+      }
+    }
+  };
+
   // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -194,7 +219,7 @@ function CartNav() {
                   </div>
 
                   <div className="action_set_nav">
-                    <div className="icon_set">
+                    <div className="icon_set" onClick={handleUserClick}>
                       <svg
                         width="32"
                         height="32"

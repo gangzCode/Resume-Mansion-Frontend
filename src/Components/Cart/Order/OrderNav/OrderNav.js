@@ -1,16 +1,70 @@
 import React, { useState, useEffect } from "react";
 import "./ordernav.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../../Context/AuthContext";
+import { useSnackbar } from "../../../../Context/SnackbarContext";
+import { getCartItems } from "../../../../Services/apiCalls";
 
 function OrderNav() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, isAuthenticated, user } = useAuth();
+  const { showSnackbar } = useSnackbar();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const orderDetailsLocal = localStorage.getItem("orderDetails");
+  const prevOrderDetailsLocal = localStorage.getItem("prevOrderDetails");
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setShowLogoutConfirm(false);
+    showSnackbar("Successfully logged out", "success");
+    window.location.href = "/";
+  };
+
+  const handleCartClick = async () => {
+    try {
+      const cartResponse = await getCartItems();
+      console.log(cartResponse.transaction_id, cartResponse);
+
+      if (cartResponse.transaction_id !== 0) {
+        navigate("/itemCart");
+      } else {
+        navigate("/emptyCart");
+      }
+    } catch (error) {
+      console.error("Failed to check cart:", error);
+      navigate("/emptyCart");
+    }
+  };
+
+  const handleUserClick = () => {
+    console.log("orderDetailsLocal", orderDetailsLocal);
+
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      if (orderDetailsLocal) {
+        console.log("orderDetailsLocal", orderDetailsLocal);
+
+        navigate("/currentOrder");
+      } else if (prevOrderDetailsLocal) {
+        navigate("/previousOrders");
+      }
+    }
+  };
+
   // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -210,7 +264,7 @@ function OrderNav() {
                         </p>
                       </div>
                       <div className="action_set_nav">
-                        <div className="icon_set">
+                        <div className="icon_set" onClick={handleUserClick}>
                           <svg
                             width="32"
                             height="32"
@@ -241,10 +295,7 @@ function OrderNav() {
                             </defs>
                           </svg>
                         </div>
-                        <div
-                          className="icon_set"
-                          onClick={() => (window.location.href = "/emptyCart")}
-                        >
+                        <div className="icon_set" onClick={handleCartClick}>
                           <svg
                             width="32"
                             height="32"
@@ -277,7 +328,7 @@ function OrderNav() {
                         </div>
                         <button
                           className="logout_btn_nav nodis"
-                          onClick={() => (window.location.href = "/")}
+                          onClick={handleLogoutClick}
                         >
                           Log Out
                         </button>
@@ -374,15 +425,12 @@ function OrderNav() {
               >
                 Previous Orders
               </p>
-              <p
-                className="nav_item"
-                onClick={() => (window.location.href = "/login")}
-              >
+              <p className="nav_item" onClick={handleUserClick}>
                 Profile
               </p>
               <button
                 className="logout_btn_nav res_verson"
-                onClick={() => (window.location.href = "/")}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </button>
@@ -390,6 +438,53 @@ function OrderNav() {
           )}
         </div>
       </div>
+
+      {showLogoutConfirm && (
+        <div className="logout_popup_overlay">
+          <div className="logout_popup">
+            <div className="logout_popup_header">
+              <h4>Confirm Logout</h4>
+              <button
+                className="close_button"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="#666666"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="logout_popup_content">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="24" fill="#FFF5F5" />
+                <path
+                  d="M24 12L24 26M24 36L24 32"
+                  stroke="#DC2626"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <p>Are you sure you want to log out from your account?</p>
+            </div>
+            <div className="logout_popup_actions">
+              <button
+                className="cancel_button"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button className="logout_button" onClick={handleLogoutConfirm}>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
