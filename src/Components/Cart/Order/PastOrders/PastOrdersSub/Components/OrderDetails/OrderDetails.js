@@ -385,7 +385,7 @@ function OrderDetails() {
         </p>
       </div>
 
-      {orderDetails.status !== "delivered" &&
+      {orderDetails.status !== "Delivered" &&
         addons
           .filter((addon) => {
             const hasExpressAddon = orderDetails.lines.some((line) =>

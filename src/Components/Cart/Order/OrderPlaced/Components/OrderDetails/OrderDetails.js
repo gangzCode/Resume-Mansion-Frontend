@@ -395,7 +395,8 @@ function OrderDetails() {
         </div>
       </div>
 
-      {orderDetails.status !== "delivered" &&
+      {/* Add-ons section - show only if order is not delivered */}
+      {orderDetails.status !== "Delivered" &&
         addons
           .filter((addon) => {
             const hasExpressAddon = orderDetails.lines.some((line) =>
@@ -421,6 +422,20 @@ function OrderDetails() {
               </div>
             </div>
           ))}
+
+      {orderDetails.status === "Delivered" && (
+        <button className="order_details_continer_chat_againbtn">
+          Order again
+        </button>
+      )}
+
+      <div className="chat_help_box">
+        <p className="topic_need_order">Need a help with your order? </p>
+        <p className="topic_pera_need_order">
+          Contact us:
+          <span className="mail_chat">contact@resumemansion.com</span>
+        </p>
+      </div>
 
       {selectedAddon && (
         <Elements stripe={stripePromise}>

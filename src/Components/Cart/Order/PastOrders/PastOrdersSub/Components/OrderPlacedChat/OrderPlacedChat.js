@@ -51,6 +51,7 @@ function OrderPlacedChat() {
   const [daliverDataUpdatedViaMessage, setdaliverDataUpdatedViaMessage] =
     useState(false);
   const [previousMessageCount, setPreviousMessageCount] = useState(0);
+  const [showTemplateOptions, setShowTemplateOptions] = useState(false);
 
   const hasTextMessage = messageText.trim().length > 0;
   const hasFiles = selectedFiles.length > 0;
@@ -100,6 +101,25 @@ function OrderPlacedChat() {
           created_at: msg.created_at || new Date().toISOString(),
           attachments: msg.attachments || [],
         }));
+
+        const templateMessage = formattedMessages.find(
+          (msg) =>
+            msg.sender_type === "admin" &&
+            msg.message &&
+            msg.message
+              .toLowerCase()
+              .includes(
+                "please tell us your preferred template for your resume. we recommend options a and b for the best impact"
+              )
+        );
+
+        if (templateMessage && !showTemplateOptions) {
+          setShowTemplateOptions(true);
+
+          if (templateImages.length === 0 || templatesLoading) {
+            loadTemplateImages();
+          }
+        }
 
         const hasNewIncomingMessages =
           formattedMessages.length > previousMessageCount;
@@ -261,29 +281,29 @@ function OrderPlacedChat() {
     }
   }, [messages]);
 
-  useEffect(() => {
-    const fetchTemplateImages = async () => {
-      try {
-        setTemplatesLoading(true);
-        const response = await getResumeImages();
+  const loadTemplateImages = async () => {
+    try {
+      setTemplatesLoading(true);
+      const response = await getResumeImages();
 
-        if (response && response.http_status === 200 && response.data) {
-          const formattedImages = response.data.map((item, index) => ({
-            src: item.image,
-            name: `Template ${String.fromCharCode(65 + index)}`,
-            id: item.id,
-          }));
+      if (response && response.http_status === 200 && response.data) {
+        const formattedImages = response.data.map((item, index) => ({
+          src: item.image,
+          name: `Template ${String.fromCharCode(65 + index)}`,
+          id: item.id,
+        }));
 
-          setTemplateImages(formattedImages);
-        }
-      } catch (err) {
-        console.error("Error fetching resume templates:", err);
-      } finally {
-        setTemplatesLoading(false);
+        setTemplateImages(formattedImages);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching resume templates:", err);
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
 
-    fetchTemplateImages();
+  useEffect(() => {
+    loadTemplateImages();
   }, []);
 
   const handleSendMessage = async () => {
@@ -1054,7 +1074,11 @@ function OrderPlacedChat() {
                 <p className="OrderPlacedChat_section_one_topic">
                   You placed the order
                 </p>
-                <p className="OrderPlacedChat_section_one_date">now</p>
+                <p className="OrderPlacedChat_section_one_date">
+                  {orderData?.updated_at
+                    ? formatDate(orderData?.updated_at)
+                    : "now"}
+                </p>
               </div>
             )}
             <div className="OrderPlacedChat_section_two">
@@ -1191,377 +1215,11 @@ function OrderPlacedChat() {
                   />
                   <div className="auther_data_set">
                     <p className="avatar_name_blog">Admin</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="Receive_msg_con">
-              <div className="chat_resivebox">
-                <p className="resive_msg">
-                  Please tell us your preferred template for your resume. We
-                  recommend options A and B for the best impact!
-                </p>
-              </div>
-              <div className="chat_resivebox">
-                <div className="cv_template_con">
-                  <div
-                    className="cv_template_boxone"
-                    style={getBackgroundImage(0)}
-                    onClick={() => openModal(0)}
-                  >
-                    <p className="cv_template_box_num">A</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                  <div
-                    className="cv_template_boxtwo"
-                    style={getBackgroundImage(1)}
-                    onClick={() => openModal(1)}
-                  >
-                    <p className="cv_template_box_num">B</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                  <div
-                    className="cv_template_boxthree"
-                    style={getBackgroundImage(2)}
-                    onClick={() => openModal(2)}
-                  >
-                    <p className="cv_template_box_num">C</p>
-                    <div className="cv_template_box_zome">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                      >
-                        <g clip-path="url(#clip0_331_33125)">
-                          <path
-                            d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M5.83398 8.33301H10.834"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M8.33398 5.83301V10.833"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M17.5 17.5L12.5 12.5"
-                            stroke="black"
-                            stroke-width="1.66667"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_331_33125">
-                            <rect width="20" height="20" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-
-                  {isModalOpen && (
-                    <div className="main_model_con_cv">
-                      <div className="modal-overlay_close" onClick={closeModal}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                        >
-                          <g clip-path="url(#clip0_331_34992)">
-                            <path
-                              d="M24 8L8 24"
-                              stroke="black"
-                              stroke-width="2.66667"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                            <path
-                              d="M8 8L24 24"
-                              stroke="black"
-                              stroke-width="2.66667"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                          </g>
-                          <defs>
-                            <clipPath id="clip0_331_34992">
-                              <rect width="32" height="32" fill="white" />
-                            </clipPath>
-                          </defs>
-                        </svg>
-                      </div>
-                      <div className="modal_chat_bot">
-                        <p className="template_name_cv">
-                          {images[currentImageIndex].name}
-                        </p>
-                        <div className="modal_sub">
-                          <div className="modal-content">
-                            <button
-                              className="chat_model_arrow left_arrow_chat norml_type_chat_btn"
-                              onClick={() => navigateImage("prev")}
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="30"
-                                height="30"
-                                viewBox="0 0 30 30"
-                                fill="none"
-                              >
-                                <mask
-                                  id="mask0_331_34978"
-                                  maskUnits="userSpaceOnUse"
-                                  x="0"
-                                  y="0"
-                                  width="30"
-                                  height="30"
-                                >
-                                  <path d="M0 30H30V0H0V30Z" fill="white" />
-                                </mask>
-                                <g mask="url(#mask0_331_34978)">
-                                  <path
-                                    d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
-                                    fill="white"
-                                  />
-                                </g>
-                              </svg>
-                            </button>
-
-                            {templatesLoading ? (
-                              <div className="template-loading">
-                                Loading templates...
-                              </div>
-                            ) : !templateImages[currentImageIndex] ||
-                              !templateImages[currentImageIndex].src ? (
-                              <div className="template-error">
-                                Template image not available
-                              </div>
-                            ) : (
-                              <img
-                                src={templateImages[currentImageIndex].src}
-                                alt={templateImages[currentImageIndex].name}
-                                className="model_image_chat"
-                              />
-                            )}
-
-                            <button
-                              className="chat_model_arrow right_arrow_chat norml_type_chat_btn"
-                              onClick={() => navigateImage("next")}
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="30"
-                                height="30"
-                                viewBox="0 0 30 30"
-                                fill="none"
-                              >
-                                <mask
-                                  id="mask0_331_34985"
-                                  maskUnits="userSpaceOnUse"
-                                  x="0"
-                                  y="0"
-                                  width="30"
-                                  height="30"
-                                >
-                                  <path d="M30 30H0V0H30V30Z" fill="white" />
-                                </mask>
-                                <g mask="url(#mask0_331_34985)">
-                                  <path
-                                    d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
-                                    fill="white"
-                                  />
-                                </g>
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="res_type_chat_btn">
-                          <button
-                            className="chat_model_arrow_res left_arrow_chat_res"
-                            onClick={() => navigateImage("prev")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 30 30"
-                              fill="none"
-                            >
-                              <mask
-                                id="mask0_331_34978"
-                                maskUnits="userSpaceOnUse"
-                                x="0"
-                                y="0"
-                                width="30"
-                                height="30"
-                              >
-                                <path d="M0 30H30V0H0V30Z" fill="white" />
-                              </mask>
-                              <g mask="url(#mask0_331_34978)">
-                                <path
-                                  d="M11.25 23.75L13.0125 21.9875L7.2875 16.25H27.5V13.75H7.2875L13.025 8.0125L11.25 6.25L2.5 15L11.25 23.75Z"
-                                  fill="white"
-                                />
-                              </g>
-                            </svg>
-                          </button>
-                          <button
-                            className="chat_model_arrow_res right_arrow_chat_res"
-                            onClick={() => navigateImage("next")}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 30 30"
-                              fill="none"
-                            >
-                              <mask
-                                id="mask0_331_34985"
-                                maskUnits="userSpaceOnUse"
-                                x="0"
-                                y="0"
-                                width="30"
-                                height="30"
-                              >
-                                <path d="M30 30H0V0H30V30Z" fill="white" />
-                              </mask>
-                              <g mask="url(#mask0_331_34985)">
-                                <path
-                                  d="M18.75 23.75L16.9875 21.9875L22.7125 16.25H2.5V13.75H22.7125L16.975 8.0125L18.75 6.25L27.5 15L18.75 23.75Z"
-                                  fill="white"
-                                />
-                              </g>
-                            </svg>
-                          </button>
-                        </div>
-                        <button
-                          onClick={() =>
-                            (window.location.href = "/currentOrder")
-                          }
-                          className="back_chat_btn"
-                        >
-                          Back to chat
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="sender_box">
-                <div className="auther_continer_blog_card">
-                  <img
-                    src={Avatar}
-                    alt="avatar_image"
-                    className="avatar_card_blog"
-                  />
-                  <div className="auther_data_set">
-                    <p className="avatar_name_blog">Admin</p>
-                    {/* <p className="avatar_date">Oct 02, 7:38 PM</p> */}
+                    <p className="avatar_date">
+                      {orderData?.updated_at
+                        ? formatDate(orderData?.updated_at)
+                        : "now"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1587,36 +1245,178 @@ function OrderPlacedChat() {
                   <div className="chat_resivebox">
                     <p className="resive_msg">{item.message}</p>
 
+                    {item.message &&
+                      item.message
+                        .toLowerCase()
+                        .includes("preferred template") &&
+                      item.message.toLowerCase().includes("resume") &&
+                      showTemplateOptions && (
+                        <div className="cv_template_con">
+                          <div
+                            className="cv_template_boxone"
+                            style={getBackgroundImage(0)}
+                            onClick={() => openModal(0)}
+                          >
+                            <p className="cv_template_box_num">A</p>
+                            <div className="cv_template_box_zome">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                              >
+                                <g clip-path="url(#clip0_331_33125)">
+                                  <path
+                                    d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M5.83398 8.33301H10.834"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M8.33398 5.83301V10.833"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M17.5 17.5L12.5 12.5"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                </g>
+                                <defs>
+                                  <clipPath id="clip0_331_33125">
+                                    <rect width="20" height="20" fill="white" />
+                                  </clipPath>
+                                </defs>
+                              </svg>
+                            </div>
+                          </div>
+                          <div
+                            className="cv_template_boxtwo"
+                            style={getBackgroundImage(1)}
+                            onClick={() => openModal(1)}
+                          >
+                            <p className="cv_template_box_num">B</p>
+                            <div className="cv_template_box_zome">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                              >
+                                <g clip-path="url(#clip0_331_33125)">
+                                  <path
+                                    d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M5.83398 8.33301H10.834"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M8.33398 5.83301V10.833"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M17.5 17.5L12.5 12.5"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                </g>
+                                <defs>
+                                  <clipPath id="clip0_331_33125">
+                                    <rect width="20" height="20" fill="white" />
+                                  </clipPath>
+                                </defs>
+                              </svg>
+                            </div>
+                          </div>
+                          <div
+                            className="cv_template_boxthree"
+                            style={getBackgroundImage(2)}
+                            onClick={() => openModal(2)}
+                          >
+                            <p className="cv_template_box_num">C</p>
+                            <div className="cv_template_box_zome">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                              >
+                                <g clip-path="url(#clip0_331_33125)">
+                                  <path
+                                    d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M5.83398 8.33301H10.834"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M8.33398 5.83301V10.833"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path
+                                    d="M17.5 17.5L12.5 12.5"
+                                    stroke="black"
+                                    stroke-width="1.66667"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                </g>
+                                <defs>
+                                  <clipPath id="clip0_331_33125">
+                                    <rect width="20" height="20" fill="white" />
+                                  </clipPath>
+                                </defs>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                     {/* Attachments rendering */}
                     {item.attachments &&
                       item.attachments.length > 0 &&
                       item.attachments.map((attachment, idx) => (
                         <div key={idx} className="doc_card_cv">
-                          <div className="doc_name_card_type">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="23"
-                              height="24"
-                              viewBox="0 0 23 24"
-                              fill="none"
-                            >
-                              {/* File icon SVG */}
-                            </svg>
-                          </div>
-                          <p className="doc_name_card">
-                            {attachment.file_name}
-                          </p>
-                          <div className="doc_name_card_dwon">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                            >
-                              {/* Download icon SVG */}
-                            </svg>
-                          </div>
+                          {/* Attachment code */}
                         </div>
                       ))}
                   </div>
@@ -1630,7 +1430,7 @@ function OrderPlacedChat() {
                       <div className="auther_data_set">
                         <p className="avatar_name_blog">
                           {item.sender_name ||
-                            orderData.admin_name ||
+                            orderData?.admin_name ||
                             "Team Member"}
                         </p>
                         <p className="avatar_date">
