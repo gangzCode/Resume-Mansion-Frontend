@@ -4,15 +4,21 @@
   justify-content: space-between;
   height: auto;
   margin: 0 auto;
+  max-width: 1800px;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
 }
 
 .paymnet_continer_main_card {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 48px;
   flex: 1 1;
   padding: 100px 95px;
+  width: 100%;
+  max-width: 800px;
 }
 .paymnet_continer_main_card_subbb {
   flex-direction: column;
@@ -21,6 +27,10 @@
   display: flex;
   gap: 48px;
   /* padding: 0 0 0 100px; */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  background-color: white;
 }
 .paymnet_continer_main_card_two_subb {
   margin: 0 auto;
@@ -28,6 +38,10 @@
   justify-content: center;
   align-items: center;
   display: flex;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  background-color: white;
 }
 .paymnet_continer_main_card_two {
   /* display: flex;
@@ -36,8 +50,9 @@
 
   flex: 1;
   width: 100%;
-  padding: 100px 95px;
+  padding: 50px 95px;
   background: var(--surface-secondary, #fff);
+  max-width: 800px;
 }
 .paymnet_back_continer {
   display: flex;
@@ -146,7 +161,7 @@
     flex-direction: column;
   }
   .paymnet_continer_main_card {
-    padding: 24px;
+    padding: 24px 0;
   }
   .paymnet_continer_main_card_section_two_card,
   .paymnet_continer_main_card_section_two,
@@ -155,7 +170,7 @@
     width: 100%;
   }
   .paymnet_continer_main_card_two {
-    padding: 100px 0px;
+    padding: 50px 0px;
   }
 }
 
@@ -205,14 +220,14 @@
 }
 
 .form-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .section-title {
   color: #32325d;
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  margin-bottom: 1.75rem;
+  font-weight: 700;
 }
 
 .form-row {
@@ -252,10 +267,19 @@
 }
 
 .card-element-container {
-  padding: 1rem;
-  border: 1px solid #e6e6e6;
-  border-radius: 4px;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   background: #f8f9fa;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card-element-container:hover,
+.card-element-container:focus-within {
+  border-color: #237655;
+  box-shadow: 0 2px 6px rgba(35, 118, 85, 0.15);
 }
 
 .error-message {
@@ -278,16 +302,17 @@
 
 .submit-button {
   width: 100%;
-  padding: 1rem;
+  padding: 1.25rem;
   background: #237655;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1.125rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
+  letter-spacing: 0.5px;
 }
 
 .submit-button:hover:not(:disabled) {
@@ -356,7 +381,8 @@
   }
 
   .section-title {
-    font-size: 1.125rem;
+    font-size: 1.3rem;
+    text-align: center;
     margin-bottom: 1rem;
   }
 
@@ -366,7 +392,7 @@
   }
 
   .card-element-container {
-    padding: 0.75rem;
+    padding: 1.25rem;
   }
 
   .submit-button {
@@ -405,4 +431,30 @@
   .form-row {
     margin-bottom: 0.75rem;
   }
+}
+
+.class_continer.emptycart_bk {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+@media (min-width: 992px) {
+  .paymnet_continer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+  }
+
+  .paymnet_continer_main_card,
+  .paymnet_continer_main_card_two {
+    max-width: 800px;
+  }
+}
+
+.StripeElement {
+  padding: 0.5rem 0;
 }

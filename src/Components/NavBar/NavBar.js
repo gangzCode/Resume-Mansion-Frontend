@@ -79,7 +79,8 @@ function NavBar() {
         location.pathname === "/currentOrder" ||
         location.pathname === "/emptyCart" ||
         location.pathname === "/pastOrders" ||
-        location.pathname === "/previousOrders"
+        location.pathname === "/previousOrders" ||
+        location.pathname === "/payment"
       ) {
         setIsVisible(false);
       } else {
@@ -100,7 +101,8 @@ function NavBar() {
       location.pathname === "/emptyCart" ||
       location.pathname === "/currentOrder" ||
       location.pathname === "/pastOrders" ||
-      location.pathname === "/previousOrders"
+      location.pathname === "/previousOrders" ||
+      location.pathname === "/payment"
     ) {
       setIsVisible(false);
     } else {
