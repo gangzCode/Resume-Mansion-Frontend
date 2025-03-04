@@ -463,4 +463,7 @@
   .nroml_verson {
     display: none;
   }
+  .action_set_nav {
+    gap: 15px;
+  }
 }
