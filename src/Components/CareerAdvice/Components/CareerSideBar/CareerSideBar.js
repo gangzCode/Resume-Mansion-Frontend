@@ -1,9 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './careerSideBar.css';
 import { CiSearch } from "react-icons/ci";
+import {
+    getBlogCategories
+  } from "../../../../Services/apiCalls";
 
 function CareerSideBar() {
     const [showAllTags, setShowAllTags] = useState(false);
+    const [blogCategories, setBlogCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchPackages = async () => {
+          try {
+            const response = await getBlogCategories();
+            setBlogCategories(response.data || []);
+            setLoading(false);
+          } catch (err) {
+            setError("Failed to load blog categories");
+            setLoading(false);
+          }
+        };
+    
+        fetchPackages();
+      }, []);
+
 
     const tags = [
         "#ResumeMansion", "#ResumeWriting", "#CVWriting", "#CareerAdvice", "#Recruiter",
@@ -18,6 +40,7 @@ function CareerSideBar() {
         "#JobSearchPlanning", "#StrategicJobSearch", "#JobSearchStrategy", "#ProfessionalReference", "#JobSearchSchedule",
         "#JobSearchCalendar", "#JobHuntTips"
     ];
+
 
     const handleToggleTags = () => {
         setShowAllTags(!showAllTags);
@@ -36,13 +59,11 @@ function CareerSideBar() {
                     <p className='career_side_section_two_topic'>Blog categories</p>
                     <div className='career_side_section_two_nav_item_set'>
                         <p className='career_side_section_two_nav_item career_side_section_two_nav_item_active'>View all</p>
-                        <p className='career_side_section_two_nav_item'>Resume Mansion </p>
-                        <p className='career_side_section_two_nav_item'>Career Advice </p>
-                        <p className='career_side_section_two_nav_item'>Job Application </p>
-                        <p className='career_side_section_two_nav_item'>Recruiter </p>
-                        <p className='career_side_section_two_nav_item'>Resume Format </p>
-                        <p className='career_side_section_two_nav_item'>Interview </p>
-                        <p className='career_side_section_two_nav_item'>CV Writing  </p>
+                        {blogCategories.map((category) => (
+                                <p key={category.id} className='career_side_section_two_nav_item'>
+                                    {category.category.trim()}
+                                </p>
+                            ))}
                     </div>
                 </div>
                 <div className='career_side_section_three'>

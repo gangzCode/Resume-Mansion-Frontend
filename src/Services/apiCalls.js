@@ -440,3 +440,16 @@ export const getResumeImages = async () => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const getBlogCategories = async () => {
+  try {
+    const res = await axios.get(baseUrl + "/categories", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response ? error.response.status : error;
+  }
+};
