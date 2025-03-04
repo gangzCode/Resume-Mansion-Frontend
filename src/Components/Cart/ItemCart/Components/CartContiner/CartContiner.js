@@ -55,13 +55,7 @@ function CartContiner() {
           setOrderId(response.data.order_id);
           localStorage.setItem("orderId", response.data.order_id);
 
-          if (storedPackage) {
-            const parsedPackage = JSON.parse(storedPackage);
-            setpackageId(parsedPackage.id);
-            setTopic(parsedPackage.title);
-            setPrice(parsedPackage.price);
-            setpkgShortDesc(parsedPackage.shortDescription);
-          } else if (response.data.package_id) {
+          if (response.data.package_id) {
             setpackageId(response.data.package_id);
             setTopic(response.data.package);
             setpkgShortDesc(response.data.short_description);

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import "./OrderDetails.css";
 import axios from "axios";
 import {
+  addToCartService,
   getCurrentOrder,
   getPackageAddons,
+  updateCartAddons,
   updateCurrentOrder,
 } from "../../../../../../Services/apiCalls";
 import Loader from "../../../../../Common/Loader";
@@ -15,6 +17,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { useNavigate } from "react-router";
 
 const stripePromise = loadStripe(
   "pk_test_51QycJvBOp5kjpMN7KQ9msUMvpURA7PkcvlfzTah60mxY1OmSQ05gLhbMow8lHADOHEm6c8uDBoChiLtDQQ7pnBIK00S5U2hgaP"
@@ -135,6 +138,7 @@ function OrderDetails() {
   const [isAdding, setIsAdding] = useState(false);
   const { showSnackbar } = useSnackbar();
   const [selectedAddon, setSelectedAddon] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -172,6 +176,45 @@ function OrderDetails() {
 
   const handlePayClick = (addon) => {
     setSelectedAddon(addon);
+  };
+
+  const handleOrderAgain = async () => {
+    try {
+      localStorage.removeItem("selectedPackage");
+      setLoading(true);
+
+      const cartData = {
+        package_id: orderDetails.package_id,
+      };
+
+      const response = await addToCartService(cartData);
+
+      if (response.http_status === 200) {
+        const orderId = response.data.order.id;
+
+        if (orderDetails.lines && orderDetails.lines.length > 0) {
+          for (const line of orderDetails.lines) {
+            try {
+              if (!line || !line.addon_id) continue;
+
+              await updateCartAddons(orderId, line.addon_id, line.quantity);
+            } catch (addonError) {
+              console.error(`Error adding addon ${line.addon}:`, addonError);
+            }
+          }
+        }
+
+        showSnackbar("Package added to cart successfully", "success");
+        navigate("/itemCart");
+      } else {
+        throw new Error("Failed to add package to cart");
+      }
+    } catch (error) {
+      console.error("Error adding package to cart:", error);
+      showSnackbar("Failed to add items to cart", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) return <Loader />;
@@ -395,7 +438,6 @@ function OrderDetails() {
         </div>
       </div>
 
-      {/* Add-ons section - show only if order is not delivered */}
       {orderDetails.status !== "Delivered" &&
         addons
           .filter((addon) => {
@@ -424,7 +466,10 @@ function OrderDetails() {
           ))}
 
       {orderDetails.status === "Delivered" && (
-        <button className="order_details_continer_chat_againbtn">
+        <button
+          className="order_details_continer_chat_againbtn"
+          onClick={handleOrderAgain}
+        >
           Order again
         </button>
       )}

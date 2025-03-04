@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./OrderDetails.css";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import {
+  addToCartService,
   getCurrentOrder,
   getPackageAddons,
   getPreviousOrderDetails,
+  updateCartAddons,
   updateCurrentOrder,
 } from "../../../../../../../Services/apiCalls";
 import Loader from "../../../../../../Common/Loader";
@@ -138,7 +140,7 @@ function OrderDetails() {
   const [addons, setAddons] = useState([]);
   const { showSnackbar } = useSnackbar();
   const [selectedAddon, setSelectedAddon] = useState(null);
-
+  const navigate = useNavigate();
   const orderId = location.state?.id;
 
   useEffect(() => {
@@ -208,6 +210,45 @@ function OrderDetails() {
 
   const handlePayClick = (addon) => {
     setSelectedAddon(addon);
+  };
+
+  const handleOrderAgain = async () => {
+    try {
+      localStorage.removeItem("selectedPackage");
+      setLoading(true);
+
+      const cartData = {
+        package_id: orderDetails.package_id,
+      };
+
+      const response = await addToCartService(cartData);
+
+      if (response.http_status === 200) {
+        const orderId = response.data.order.id;
+
+        if (orderDetails.lines && orderDetails.lines.length > 0) {
+          for (const line of orderDetails.lines) {
+            try {
+              if (!line || !line.addon_id) continue;
+
+              await updateCartAddons(orderId, line.addon_id, line.quantity);
+            } catch (addonError) {
+              console.error(`Error adding addon ${line.addon}:`, addonError);
+            }
+          }
+        }
+
+        showSnackbar("Package added to cart successfully", "success");
+        navigate("/itemCart");
+      } else {
+        throw new Error("Failed to add package to cart");
+      }
+    } catch (error) {
+      console.error("Error adding package to cart:", error);
+      showSnackbar("Failed to add items to cart", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) return <Loader />;
@@ -369,7 +410,10 @@ function OrderDetails() {
       </div>
 
       {orderDetails.status === "Delivered" && (
-        <button className="order_details_continer_chat_againbtn">
+        <button
+          className="order_details_continer_chat_againbtn"
+          onClick={handleOrderAgain}
+        >
           Order again
         </button>
       )}
