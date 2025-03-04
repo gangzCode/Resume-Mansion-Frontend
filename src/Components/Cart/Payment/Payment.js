@@ -13,7 +13,9 @@ import { useSnackbar } from "../../../Context/SnackbarContext";
 
 //const stripePromise = loadStripe(String(process.env.REACT_APP_STRIPE_PUBLIC_KEY));
 
-const stripePromise = loadStripe('pk_test_51QycJvBOp5kjpMN7KQ9msUMvpURA7PkcvlfzTah60mxY1OmSQ05gLhbMow8lHADOHEm6c8uDBoChiLtDQQ7pnBIK00S5U2hgaP');
+const stripePromise = loadStripe(
+  "pk_test_51QycJvBOp5kjpMN7KQ9msUMvpURA7PkcvlfzTah60mxY1OmSQ05gLhbMow8lHADOHEm6c8uDBoChiLtDQQ7pnBIK00S5U2hgaP"
+);
 
 const CheckoutForm = ({ total }) => {
   const stripe = useStripe();
@@ -21,7 +23,7 @@ const CheckoutForm = ({ total }) => {
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
 
@@ -44,13 +46,21 @@ const CheckoutForm = ({ total }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
+    setProcessing(true);
+    setError(null);
+    setPaymentStatus("processing");
 
     try {
       if (!stripe || !elements) {
+        setError("Payment system is still loading. Please try again.");
+        setProcessing(false);
+        setPaymentStatus("error");
         return;
       }
 
       const cardElement = elements.getElement(CardElement);
+
+      document.body.classList.add("payment-processing");
 
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: "card",
@@ -58,7 +68,10 @@ const CheckoutForm = ({ total }) => {
       });
 
       if (error) {
-        setMessage(error.message);
+        setError(error.message);
+        setProcessing(false);
+        setPaymentStatus("error");
+        document.body.classList.remove("payment-processing");
         return;
       }
 
@@ -86,6 +99,7 @@ const CheckoutForm = ({ total }) => {
         localStorage.removeItem("getCount");
 
         localStorage.setItem("paymentComplete", "true");
+        setPaymentStatus("success");
 
         showSnackbar(
           "Payment successful! Your order has been placed.",
@@ -94,13 +108,25 @@ const CheckoutForm = ({ total }) => {
 
         navigate("/currentOrder", { replace: true });
       } else {
-        setMessage(`Payment failed: ${response.message || "Unknown error"}`);
+        setError(`Payment failed: ${response.message || "Unknown error"}`);
+        setPaymentStatus("error");
+        showSnackbar(
+          `Payment failed: ${response.message || "Unknown error"}`,
+          "error"
+        );
       }
     } catch (error) {
-      setMessage(`Payment failed: ${error.message || "Unknown error"}`);
+      setError(`Payment failed: ${error.message || "Unknown error"}`);
+      setPaymentStatus("error");
+      showSnackbar(
+        `Payment failed: ${error.message || "Unknown error"}`,
+        "error"
+      );
       console.error("Payment error:", error);
     } finally {
       setLoading(false);
+      setProcessing(false);
+      document.body.classList.remove("payment-processing");
     }
   };
 
@@ -118,164 +144,84 @@ const CheckoutForm = ({ total }) => {
   }, [navigate]);
 
   return (
-    <form onSubmit={handleSubmit} className="checkout-form">
-      {/* <div className="form-section">
-        <h3 className="section-title">Billing Information</h3>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
-            <input
-              id="name"
-              type="text"
-              required
-              value={billingDetails.name}
-              onChange={(e) =>
-                setBillingDetails((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }))
-              }
-            />
+    <>
+      {processing && (
+        <div className="payment-loading-overlay">
+          <div className="payment-loading-content">
+            <div className="payment-spinner">
+              <div className="bounce1"></div>
+              <div className="bounce2"></div>
+              <div className="bounce3"></div>
+            </div>
+            <p>Processing your payment...</p>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={billingDetails.email}
-              onChange={(e) =>
-                setBillingDetails((prev) => ({
-                  ...prev,
-                  email: e.target.value,
-                }))
-              }
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="address">Street Address</label>
-          <input
-            id="address"
-            type="text"
-            required
-            value={billingDetails.address.line1}
-            onChange={(e) =>
-              setBillingDetails((prev) => ({
-                ...prev,
-                address: { ...prev.address, line1: e.target.value },
-              }))
-            }
-          />
-        </div>
-
-        <div className="form-row three-cols">
-          <div className="form-group">
-            <label htmlFor="city">City</label>
-            <input
-              id="city"
-              type="text"
-              required
-              value={billingDetails.address.city}
-              onChange={(e) =>
-                setBillingDetails((prev) => ({
-                  ...prev,
-                  address: { ...prev.address, city: e.target.value },
-                }))
-              }
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="state">State</label>
-            <input
-              id="state"
-              type="text"
-              required
-              value={billingDetails.address.state}
-              onChange={(e) =>
-                setBillingDetails((prev) => ({
-                  ...prev,
-                  address: { ...prev.address, state: e.target.value },
-                }))
-              }
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="postal_code">ZIP Code</label>
-            <input
-              id="postal_code"
-              type="text"
-              required
-              value={billingDetails.address.postal_code}
-              onChange={(e) =>
-                setBillingDetails((prev) => ({
-                  ...prev,
-                  address: { ...prev.address, postal_code: e.target.value },
-                }))
-              }
-            />
-          </div>
-        </div>
-      </div> */}
-
-      <div className="form-section">
-        <h3 className="section-title">Payment Details</h3>
-        <div className="card-element-container">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#424770",
-                  "::placeholder": {
-                    color: "#aab7c4",
-                  },
-                  iconColor: "#237655",
-                },
-                invalid: {
-                  color: "#9e2146",
-                  iconColor: "#9e2146",
-                },
-              },
-              hidePostalCode: true,
-            }}
-          />
-        </div>
-      </div>
-
-      {error && (
-        <div className="error-message">
-          <svg viewBox="0 0 24 24" className="error-icon">
-            <path
-              fill="currentColor"
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-            />
-          </svg>
-          {error}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className={`submit-button ${processing ? "processing" : ""}`}
-      >
-        {processing ? (
-          <div className="spinner">
-            <div className="bounce1"></div>
-            <div className="bounce2"></div>
-            <div className="bounce3"></div>
+      <form onSubmit={handleSubmit} className="checkout-form">
+        <div className="form-section">
+          <h3 className="section-title">Payment Details</h3>
+          <div className="card-element-container">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: "16px",
+                    color: "#424770",
+                    "::placeholder": {
+                      color: "#aab7c4",
+                    },
+                    iconColor: "#237655",
+                  },
+                  invalid: {
+                    color: "#9e2146",
+                    iconColor: "#9e2146",
+                  },
+                },
+                hidePostalCode: true,
+              }}
+            />
           </div>
-        ) : (
-          `Pay $${total}`
+        </div>
+
+        {error && (
+          <div className="error-message">
+            <svg viewBox="0 0 24 24" className="error-icon">
+              <path
+                fill="currentColor"
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+              />
+            </svg>
+            {error}
+          </div>
         )}
-      </button>
-    </form>
+
+        {paymentStatus === "error" && (
+          <div className="payment-error-message">
+            <p>
+              Your payment couldn't be processed. Please try again or use a
+              different payment method.
+            </p>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className={`submit-button ${processing ? "processing" : ""}`}
+        >
+          {processing ? (
+            <div className="spinner">
+              <div className="bounce1"></div>
+              <div className="bounce2"></div>
+              <div className="bounce3"></div>
+            </div>
+          ) : (
+            `Pay $${total}`
+          )}
+        </button>
+      </form>
+    </>
   );
 };
 
