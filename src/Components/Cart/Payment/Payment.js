@@ -110,18 +110,10 @@ const CheckoutForm = ({ total }) => {
       } else {
         setError(`Payment failed: ${response.message || "Unknown error"}`);
         setPaymentStatus("error");
-        showSnackbar(
-          `Payment failed: ${response.message || "Unknown error"}`,
-          "error"
-        );
       }
     } catch (error) {
       setError(`Payment failed: ${error.message || "Unknown error"}`);
       setPaymentStatus("error");
-      showSnackbar(
-        `Payment failed: ${error.message || "Unknown error"}`,
-        "error"
-      );
       console.error("Payment error:", error);
     } finally {
       setLoading(false);
@@ -145,19 +137,6 @@ const CheckoutForm = ({ total }) => {
 
   return (
     <>
-      {processing && (
-        <div className="payment-loading-overlay">
-          <div className="payment-loading-content">
-            <div className="payment-spinner">
-              <div className="bounce1"></div>
-              <div className="bounce2"></div>
-              <div className="bounce3"></div>
-            </div>
-            <p>Processing your payment...</p>
-          </div>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="checkout-form">
         <div className="form-section">
           <h3 className="section-title">Payment Details</h3>
