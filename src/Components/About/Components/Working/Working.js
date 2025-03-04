@@ -57,28 +57,28 @@ function Working() {
                                 <FaLinkedin className='worker_card_link_icon' onClick={() => window.open('https://www.linkedin.com/in/vinuri-herath-303a6519b/', '_blank')} />
                             </div>
                         </div>
-                        {/* <div className='working_card working_card_five'>
+                        <div className='working_card working_card_five'>
                             <div className='working_card_content'>
                                 <div className='working_card_worker_name_main'>
-                                    <p className='working_card_worker_name'>Mia Ward</p>
+                                    <p className='working_card_worker_name'>Elizabeth</p>
                                     <MdArrowOutward className='working_card_worker_icon' />
                                 </div>
-                                <p className='worker_card_possion'>Backend Developer</p>
-                                <p className='worker_card_pera'>Lead backend dev at Clearbit. Former Clearbit and Loom.</p>
+                                <p className='worker_card_possion'>Senior Resume Writer</p>
+                                <p className='worker_card_pera'>Creating comprehensive job search solutions for leaders.</p>
                                 <FaLinkedin className='worker_card_link_icon' onClick={() => window.open('', '_blank')} />
                             </div>
-                        </div> */}
-                        {/* <div className='working_card working_card_six'>
+                        </div> 
+                        <div className='working_card working_card_six'>
                             <div className='working_card_content'>
                                 <div className='working_card_worker_name_main'>
-                                    <p className='working_card_worker_name'>Archie Young</p>
+                                    <p className='working_card_worker_name'>Thusitha</p>
                                     <MdArrowOutward className='working_card_worker_icon' />
                                 </div>
-                                <p className='worker_card_possion'>Product Designer</p>
-                                <p className='worker_card_pera'>Founding design team at Figma. Former Pleo, Stripe, and Tile.</p>
+                                <p className='worker_card_possion'>Director</p>
+                                <p className='worker_card_pera'>Lifting careers to new heights through innovative solutions.</p>
                                 <FaLinkedin className='worker_card_link_icon' onClick={() => window.open('', '_blank')} />
                             </div>
-                        </div> */}
+                        </div>
                     </div>
                     <button className='meet_btn' onClick={() => (window.location.href = '/writers')}>Meet your writers</button>
                 </div>
