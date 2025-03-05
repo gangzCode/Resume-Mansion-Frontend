@@ -24,6 +24,89 @@ const formatDate = (dateString) => {
   });
 };
 
+const MessageAttachment = ({ url }) => {
+  const isPdf = url.toLowerCase().endsWith(".pdf");
+  const isImage = /\.(jpeg|jpg|png|gif|webp|bmp)$/i.test(url);
+  const fileName = url.split("/").pop();
+
+  const displayName = fileName.includes("_")
+    ? fileName.split("_").slice(1).join("_")
+    : fileName;
+
+  if (isImage) {
+    return (
+      <div className="message-image-attachment">
+        <img
+          src={url}
+          alt={displayName}
+          className="chat-image-preview"
+          onClick={() => window.open(url, "_blank")}
+        />
+      </div>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <div className="message-pdf-attachment">
+        <div className="pdf-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+              stroke="#FF5722"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 2V8H20"
+              stroke="#FF5722"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M12 18V12"
+              stroke="#FF5722"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M9 15H15"
+              stroke="#FF5722"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <div className="pdf-info">
+          <span className="pdf-name">{displayName}</span>
+          <div className="pdf-actions">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pdf-view-btn"
+            >
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 function OrderPlacedChat() {
   const [templateImages, setTemplateImages] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
@@ -315,7 +398,8 @@ function OrderPlacedChat() {
 
       await sendOrderMessage(
         orderData.order_id,
-        messageText.trim() || selectedFiles[0]
+        messageText.trim(),
+        selectedFiles[0]
       );
 
       setMessageText("");
@@ -387,14 +471,16 @@ function OrderPlacedChat() {
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter((file) => file.type === "application/pdf");
+    const validFiles = files.filter(
+      (file) =>
+        file.type === "application/pdf" || file.type.startsWith("image/")
+    );
 
     if (files.length !== validFiles.length) {
-      alert("Only PDF files are allowed.");
+      alert("Only PDF files and images are allowed.");
     }
 
     setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
-
     e.target.value = null;
   };
 
@@ -873,6 +959,26 @@ function OrderPlacedChat() {
     }
   };
 
+  const renderMessageContent = (message) => {
+    const content = message.message;
+
+    const isPdfLink =
+      typeof content === "string" &&
+      content.startsWith("http") &&
+      content.toLowerCase().endsWith(".pdf");
+
+    const isImageLink =
+      typeof content === "string" &&
+      content.startsWith("http") &&
+      /\.(jpeg|jpg|png|gif|webp|bmp)$/i.test(content.toLowerCase());
+
+    if (isPdfLink || isImageLink) {
+      return <MessageAttachment url={content} />;
+    }
+
+    return <p className="message-text">{content}</p>;
+  };
+
   return (
     <div>
       <div className="OrderPlacedChat_continer">
@@ -1243,7 +1349,7 @@ function OrderPlacedChat() {
               ) : item.sender_type === "admin" ? (
                 <div key={`msg-${index}`} className="Receive_msg_con">
                   <div className="chat_resivebox">
-                    <p className="resive_msg">{item.message}</p>
+                    {renderMessageContent(item)}
 
                     {item.message &&
                       item.message
@@ -1502,11 +1608,15 @@ function OrderPlacedChat() {
             disabled={hasFiles}
           />
 
-          {/* Show selected files preview */}
           {selectedFiles.length > 0 && (
             <div className="selected_files_container">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="selected_file">
+                <div
+                  key={index}
+                  className={`selected_file ${
+                    file.type.startsWith("image/") ? "image-file" : "pdf-file"
+                  }`}
+                >
                   <div className="file_info">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1515,18 +1625,21 @@ function OrderPlacedChat() {
                       viewBox="0 0 16 16"
                       fill="none"
                     >
-                      <path
-                        d="M8.66667 1.33334H4C3.64638 1.33334 3.30724 1.47382 3.05719 1.72387C2.80714 1.97392 2.66667 2.31305 2.66667 2.66667V13.3333C2.66667 13.687 2.80714 14.0261 3.05719 14.2762C3.30724 14.5262 3.64638 14.6667 4 14.6667H12C12.3536 14.6667 12.6928 14.5262 12.9428 14.2762C13.1929 14.0261 13.3333 13.687 13.3333 13.3333V6.00001L8.66667 1.33334Z"
-                        stroke="#051D14"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M8.66667 1.33334V6.00001H13.3333"
-                        stroke="#051D14"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                      {file.type.startsWith("image/") ? (
+                        <path
+                          d="M12.6667 2H3.33333C2.59695 2 2 2.59695 2 3.33333V12.6667C2 13.403 2.59695 14 3.33333 14H12.6667C13.403 14 14 13.403 14 12.6667V3.33333C14 2.59695 13.403 2 12.6667 2Z"
+                          stroke="#237655"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ) : (
+                        <path
+                          d="M8.66667 1.33334H4C3.64638 1.33334 3.30724 1.47382 3.05719 1.72387C2.80714 1.97392 2.66667 2.31305 2.66667 2.66667V13.3333C2.66667 13.687 2.80714 14.0261 3.05719 14.2762C3.30724 14.5262 3.64638 14.6667 4 14.6667H12C12.3536 14.6667 12.6928 14.5262 12.9428 14.2762C13.1929 14.0261 13.3333 13.687 13.3333 13.3333V6.00001L8.66667 1.33334Z"
+                          stroke="#051D14"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
                     </svg>
                     <span className="file_name">
                       {file.name.length > 25
@@ -1654,7 +1767,7 @@ function OrderPlacedChat() {
                   id="file-upload"
                   type="file"
                   multiple
-                  accept="application/pdf"
+                  accept="application/pdf,image/*"
                   onChange={hasTextMessage ? null : handleFileSelect}
                   disabled={hasTextMessage}
                   style={{ display: "none" }}
