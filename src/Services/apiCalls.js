@@ -407,12 +407,13 @@ export const getOrderMessages = async (orderId) => {
   }
 };
 
-export const sendOrderMessage = async (orderId, message) => {
+export const sendOrderMessage = async (orderId, message, attachment) => {
   const token = localStorage.getItem("token");
 
   const formData = new FormData();
   formData.append("order_id", orderId);
   formData.append("message", message);
+  formData.append("attachment", attachment);
 
   try {
     const response = await axios.post(`${baseUrl}/message`, formData, {

@@ -817,3 +817,143 @@
     box-shadow: 0 0 0 0 rgba(188, 236, 136, 0);
   }
 }
+
+.message-pdf-attachment {
+  display: flex;
+  background-color: rgba(255, 87, 34, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 5px 0;
+  align-items: center;
+}
+
+.pdf-icon {
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.pdf-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.pdf-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pdf-view-btn,
+.pdf-download-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pdf-view-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.pdf-download-btn {
+  background-color: #237655;
+  color: white;
+  border: 1px solid #237655;
+}
+
+.pdf-view-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.pdf-download-btn:hover {
+  background-color: #1a5a41;
+}
+
+.message-image-attachment {
+  margin: 5px 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.chat-image-preview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  cursor: pointer;
+  object-fit: contain;
+  margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.image-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.img-view-btn,
+.img-download-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.img-view-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.img-download-btn {
+  background-color: #237655;
+  color: white;
+  border: 1px solid #237655;
+}
+
+.img-view-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.img-download-btn:hover {
+  background-color: #1a5a41;
+}
+
+.selected_file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.selected_file .file_info {
+  display: flex;
+  align-items: center;
+}
+
+.selected_file .file_info svg {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.selected_file.image-file .file_info svg path {
+  stroke: #237655;
+}
