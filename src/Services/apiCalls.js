@@ -441,3 +441,44 @@ export const getResumeImages = async () => {
     throw error.response ? error.response.data : error;
   }
 };
+
+export const getBlogCategories = async () => {
+  try {
+    const res = await axios.get(baseUrl + "/categories", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response ? error.response.status : error;
+  }
+};
+
+export const getBlogsByCategoryId = async (category_id) => {
+  try {
+    const res = await axios.get(`${baseUrl}/by-category${category_id}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+export const getSingleBlogsByBlogId = async (id) => {
+  try {
+    const res = await axios.get(`${baseUrl}/article/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+
