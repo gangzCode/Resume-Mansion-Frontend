@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// export const baseUrl = "http://127.0.0.1:8000/api";
-export const baseUrl = "https://jtlanka.com/custom/API/public/api";
+export const baseUrl = "http://sub1.synapses.work/api";
+//export const baseUrl = "https://jtlanka.com/custom/API/public/api";
 
 export const getIPAddress = async () => {
   try {
@@ -457,7 +457,8 @@ export const getBlogCategories = async () => {
 
 export const getBlogsByCategoryId = async (category_id) => {
   try {
-    const res = await axios.get(`${baseUrl}/by-category${category_id}`, {
+    const res = await axios.get(`${baseUrl}/by-category`, {
+      params: category_id ? { category_id } : {},
       headers: {
         "Content-Type": "application/json",
       },
@@ -475,9 +476,22 @@ export const getSingleBlogsByBlogId = async (id) => {
         "Content-Type": "application/json",
       },
     });
-    return res.data.data;
+    return res.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
+  }
+};
+
+export const getAllTags = async () => {
+  try {
+    const res = await axios.get(baseUrl + "/tags", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response ? error.response.status : error;
   }
 };
 
