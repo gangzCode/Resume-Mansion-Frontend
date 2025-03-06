@@ -122,6 +122,7 @@ function OrderPlacedChat() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState(null);
   const location = useLocation();
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const [requirementsSubmittedViaMessage, setRequirementsSubmittedViaMessage] =
     useState(false);
@@ -978,6 +979,40 @@ function OrderPlacedChat() {
     return <p className="message-text">{content}</p>;
   };
 
+  const copyTemplateToClipboard = () => {
+    const templateText = `
+A. Your target job title
+(Place separate orders if you are targeting multiple industries)
+
+B. Work experience
+1. Company
+2. Position
+3. Period
+
+C. Personal details
+1. Address
+2. Phone
+3. Email
+
+D. Education details
+1. College/school/university
+2. Course
+3. Year
+
+E. Your current CV/Resume (If you have one)
+  `;
+
+    navigator.clipboard
+      .writeText(templateText)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  };
+
   return (
     <div>
       <div className="OrderPlacedChat_continer">
@@ -1266,14 +1301,21 @@ function OrderPlacedChat() {
                   <b>E.</b> Your current CV/Resume (If you have one)
                 </p>
               </div>
-              <p className="OrderPlacedChat_section_three_data_sub_topic">
-                Copy this template to your clip board
+              <p
+                className="OrderPlacedChat_section_three_data_sub_topic"
+                onClick={copyTemplateToClipboard}
+                style={{ cursor: "pointer" }}
+              >
+                {copySuccess
+                  ? "Copied!"
+                  : "Copy this template to your clipboard"}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
                   height="20"
                   viewBox="0 0 20 20"
                   fill="none"
+                  style={{ marginLeft: "5px" }}
                 >
                   <g clip-path="url(#clip0_40000010_7890)">
                     <path

@@ -957,3 +957,16 @@
 .selected_file.image-file .file_info svg path {
   stroke: #237655;
 }
+.OrderPlacedChat_section_three_data_sub_topic {
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.OrderPlacedChat_section_three_data_sub_topic:hover {
+  color: #237655;
+}
+
+.OrderPlacedChat_section_three_data_sub_topic:active {
+  transform: scale(0.98);
+}
