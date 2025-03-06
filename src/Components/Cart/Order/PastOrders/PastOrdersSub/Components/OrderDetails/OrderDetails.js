@@ -433,7 +433,7 @@ function OrderDetails() {
         addons
           .filter((addon) => {
             const hasExpressAddon = orderDetails.lines.some((line) =>
-              line.addon.toLowerCase().includes("express")
+              !line.addon.toLowerCase().includes("express")
             );
 
             return hasExpressAddon

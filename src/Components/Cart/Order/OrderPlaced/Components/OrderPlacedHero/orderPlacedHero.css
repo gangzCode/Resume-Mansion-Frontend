@@ -160,10 +160,6 @@
     height: 127px;
     align-items: flex-start;
   }
-
-  .OrderPlacedHeroContiner_sub_two_topic {
-    display: none;
-  }
 }
 @media (max-width: 750px) {
   .OrderPlacedHeroContiner {
@@ -205,4 +201,11 @@
     align-items: start;
     gap: 25px;
   }
+}
+.attachment-limit-note {
+  position: absolute;
+  font-size: 10px;
+  color: #777;
+  margin-top: 2px;
+  white-space: nowrap;
 }

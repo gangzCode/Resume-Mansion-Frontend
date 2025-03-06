@@ -470,17 +470,16 @@ function OrderPlacedChat() {
   };
 
   const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    const validFiles = files.filter(
-      (file) =>
-        file.type === "application/pdf" || file.type.startsWith("image/")
-    );
+    const file = e.target.files[0];
 
-    if (files.length !== validFiles.length) {
+    if (!file) return;
+
+    if (file.type === "application/pdf" || file.type.startsWith("image/")) {
+      setSelectedFiles([file]);
+    } else {
       alert("Only PDF files and images are allowed.");
     }
 
-    setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
     e.target.value = null;
   };
 
@@ -1600,7 +1599,7 @@ function OrderPlacedChat() {
             }
             placeholder={
               hasFiles
-                ? "Files selected. Clear files to type a message."
+                ? "File selected. Send this file or clear to type/attach another."
                 : "Send message..."
             }
             value={messageText}
@@ -1729,7 +1728,6 @@ function OrderPlacedChat() {
                 </svg>
               </div>
               <div>
-                {/* Add file input for attachments */}
                 <label
                   htmlFor="file-upload"
                   className={`file-upload-label ${
@@ -1766,7 +1764,6 @@ function OrderPlacedChat() {
                 <input
                   id="file-upload"
                   type="file"
-                  multiple
                   accept="application/pdf,image/*"
                   onChange={hasTextMessage ? null : handleFileSelect}
                   disabled={hasTextMessage}

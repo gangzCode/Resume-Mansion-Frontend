@@ -441,8 +441,8 @@ function OrderDetails() {
       {orderDetails.status !== "Delivered" &&
         addons
           .filter((addon) => {
-            const hasExpressAddon = orderDetails.lines.some((line) =>
-              line.addon.toLowerCase().includes("express")
+            const hasExpressAddon = orderDetails.lines.some(
+              (line) => !line.addon.toLowerCase().includes("express")
             );
 
             return hasExpressAddon
