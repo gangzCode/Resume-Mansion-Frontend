@@ -8,7 +8,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { useNavigate } from "react-router-dom";
-import { placeOrder, getCurrentOrder } from "../../../Services/apiCalls";
+import { placeOrder, getCart } from "../../../Services/apiCalls";
 import { useSnackbar } from "../../../Context/SnackbarContext";
 import Loader from "../../Common/Loader";
 
@@ -219,7 +219,7 @@ function Payment() {
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
-        const response = await getCurrentOrder();
+        const response = await getCart();
 
         if (response && response.http_status === 200) {
           const orderData = response.data;

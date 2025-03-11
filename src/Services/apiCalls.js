@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const baseUrl = "http://sub1.synapses.work/api";
+export const baseUrl = "https://sub1.synapses.work/api";
 //export const baseUrl = "https://jtlanka.com/custom/API/public/api";
 
 export const getIPAddress = async () => {
@@ -296,7 +296,7 @@ export const getCart = async () => {
 export const placeOrder = async (orderData) => {
   try {
     const response = await axios.post(
-      `${baseUrl}/cart/place-order`,
+      `${baseUrl}/cart-place-order`,
       orderData,
       {
         headers: {
