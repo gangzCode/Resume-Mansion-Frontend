@@ -505,3 +505,16 @@
   padding: 8px 0 8px 20px;
   font-size: 14px;
 }
+
+.discount-text {
+  color: #e53935;
+}
+
+.paymnet_two_card_two_section.discount {
+  margin: 6px 0;
+}
+
+.total-text {
+  font-weight: 600;
+  color: #237655;
+}

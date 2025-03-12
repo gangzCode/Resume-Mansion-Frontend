@@ -90,6 +90,8 @@ const CheckoutForm = ({ total }) => {
           currency_code: "$",
           package: localStorage.getItem("getTopic"),
           lines: JSON.parse(localStorage.getItem("cartItems") || "[]"),
+          promoDiscount: localStorage.getItem("promoDiscount") || "0",
+          appliedPromo: localStorage.getItem("appliedPromo") || null,
         };
         localStorage.setItem("orderDetails", JSON.stringify(orderDetails));
 
@@ -214,6 +216,8 @@ function Payment() {
   const [packagePrice, setpackagePrice] = useState(0);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [appliedPromo, setAppliedPromo] = useState(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -229,6 +233,33 @@ function Payment() {
           setTopic(orderData.package || "");
 
           const addonsList = orderData.lines || [];
+          let calculatedTotal = parseFloat(orderData.total || 0);
+
+          const savedPromoDiscount = localStorage.getItem("promoDiscount");
+
+          // Apply discount if available
+          if (savedPromoDiscount) {
+            const discount = parseFloat(savedPromoDiscount);
+            setPromoDiscount(discount);
+
+            // Subtract discount from total
+            calculatedTotal = Math.max(0, calculatedTotal - discount);
+          }
+
+          // Set final total after discount applied
+          setTotal(calculatedTotal);
+
+          // Load promo details if available
+          const savedAppliedPromo = localStorage.getItem("appliedPromo");
+          if (savedAppliedPromo) {
+            try {
+              setAppliedPromo(JSON.parse(savedAppliedPromo));
+            } catch (e) {
+              console.error("Error parsing saved promo data:", e);
+            }
+          }
+
+          localStorage.setItem("orderId", orderData.order_id);
 
           if (
             addonsList &&
@@ -283,6 +314,22 @@ function Payment() {
   const handleBackClick = () => {
     navigate("/itemCart");
   };
+
+  useEffect(() => {
+    return () => {
+      if (window.location.pathname !== "/payment") {
+        localStorage.removeItem("cartItems");
+        localStorage.removeItem("cartTotal");
+        localStorage.removeItem("totalAmount");
+        localStorage.removeItem("getTopic");
+        localStorage.removeItem("getCount");
+        localStorage.removeItem("packageDetails");
+        localStorage.removeItem("appliedPromo");
+        localStorage.removeItem("promoDiscount");
+        localStorage.removeItem("promoCode");
+      }
+    };
+  }, []);
 
   return (
     <div className="class_continer emptycart_bk">
@@ -513,6 +560,29 @@ function Payment() {
                           ${packagePrice}
                         </p>
                       </div>
+
+                      {addons && addons.length > 0 && (
+                        <div className="paymnet_two_card_two_section">
+                          <p className="paymnet_two_card_two_section_name">
+                            Add-ons
+                          </p>
+                          <p className="paymnet_two_card_two_section_name">
+                            ${(total - packagePrice).toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+
+                      {promoDiscount > 0 && (
+                        <div className="paymnet_two_card_two_section discount">
+                          <p className="paymnet_two_card_two_section_name">
+                            Promo Discount
+                          </p>
+                          <p className="paymnet_two_card_two_section_name discount-text">
+                            -${promoDiscount.toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+
                       <div className="paymnet_two_card_two_section">
                         <p className="paymnet_two_card_two_section_name_b">
                           Total Amount

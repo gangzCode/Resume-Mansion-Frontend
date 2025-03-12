@@ -403,9 +403,19 @@ function CartContiner() {
         setTotal((prevTotal) => prevTotal - discount);
         setShowPromoForm(false);
         setPromoCode("");
+
+        localStorage.setItem("appliedPromo", JSON.stringify(response.data));
+        localStorage.setItem("promoDiscount", discount.toString());
+        localStorage.setItem("promoCode", promoCode);
+
+        console.log("Promo code applied successfully!");
       }
     } catch (error) {
       setPromoError(error.message || "Invalid promo code");
+
+      localStorage.removeItem("appliedPromo");
+      localStorage.removeItem("promoDiscount");
+      localStorage.removeItem("promoCode");
     } finally {
       setIsApplyingPromo(false);
     }

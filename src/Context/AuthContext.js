@@ -22,6 +22,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("prevOrderDetails");
     localStorage.removeItem("cartTotal");
     localStorage.removeItem("cartItems");
+    localStorage.removeItem("appliedPromo");
+    localStorage.removeItem("promoDiscount");
+    localStorage.removeItem("promoCode");
 
     setIsAuthenticated(false);
     setUser(null);
