@@ -999,12 +999,17 @@ function CartContiner() {
                   )}
 
                   <div className="amounr_box_card">
+                    {getSelectedServicePrice()}
+
                     <div className="amounr_box_card_data">
                       <p className="amounr_box_cardonee">Sub Total</p>
-                      <p className="amounr_box_cardonee">${price || 0}</p>
+                      <p className="amounr_box_cardonee">
+                        $
+                        {topic === "Build Your Own Package"
+                          ? total
+                          : price || 0}
+                      </p>
                     </div>
-
-                    {getSelectedServicePrice()}
 
                     {appliedPromo && (
                       <div className="amounr_box_card_data discount">

@@ -431,15 +431,9 @@ function OrderDetails() {
 
       {orderDetails.status !== "Delivered" &&
         addons
-          .filter((addon) => {
-            const hasExpressAddon = orderDetails.lines.some((line) =>
-              !line.addon.toLowerCase().includes("express")
-            );
-
-            return hasExpressAddon
-              ? !addon.title.toLowerCase().includes("express")
-              : true;
-          })
+          .filter(
+            (addon) => !addon.title.toLowerCase().includes("express delivery")
+          )
           .map((addon) => (
             <div key={addon.id} className="link_chat_box">
               <p className="link_chat_box_topic">{addon.title}</p>
